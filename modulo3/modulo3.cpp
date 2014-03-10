@@ -441,11 +441,11 @@ int criaMenu(Botao b[]) {
 	
 	
 	for(i=0; i<QTD_BT;i++) {
-		if(b[0].img==NULL)/*verifica se todos os botoes foram carregados com sucesso*/
+		if(b[i].img==NULL)/*verifica se todos os botoes foram carregados com sucesso*/
 			return -1;
 		
 		else
-			al_set_target_bitmap(b[0].img);/*nao tenho certeza o que isso faz =P */
+			al_set_target_bitmap(b[i].img);/*nao tenho certeza o que isso faz =P */
 	}
 
 	/*define posicoes dos botoes*/
@@ -552,7 +552,7 @@ int main(int argc, char argv[]) {
 	/*cria barra de botoes*/
 	if(criaMenu(botoes)==-1) {
 		al_show_native_message_box(janela, "ERRO FATAL", "Falha ao cria barra de botoes", erroMsgBuf, NULL, ALLEGRO_MESSAGEBOX_ERROR);
-		exit(0);
+		return 0;
 	}
 
 	/*define botoes ativos e inativos*/
