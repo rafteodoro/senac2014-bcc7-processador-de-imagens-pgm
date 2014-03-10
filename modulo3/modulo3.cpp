@@ -27,7 +27,7 @@ int jL, jA; //altura e largura da janela
 @param
 	ALLEGRO_DISPLAY *janela - janela onde ira mostrar a interface 
 */
-char * uiGetDiretorio(ALLEGRO_DISPLAY *janela, const char *msg, int flag){
+char * uiGetDiretorio(ALLEGRO_DISPLAY *janela, const char *msg, int flag) {
 	ALLEGRO_FILECHOOSER *file_dialog;
 	file_dialog = al_create_native_file_dialog("c:/", msg, "*.pgm*",flag);
 	al_show_native_file_dialog(janela, file_dialog);
@@ -40,41 +40,35 @@ char * uiGetDiretorio(ALLEGRO_DISPLAY *janela, const char *msg, int flag){
 	char *tp - identifica o tipo de IO (gravacao ou leitura)
 	ALLEGRO_DISPLAY *janela - janela onde ira mostrar a interface 
 */
-FILE *abreArquivo(char *tp, ALLEGRO_DISPLAY *janela){
+FILE *abreArquivo(char *tp, ALLEGRO_DISPLAY *janela) {
 	FILE *arquivo;
 	char *msg;
 	int flag=0;
 	
-	if(tp == "r+b")
-	{
+	if(tp == "r+b") {
 		msg = "Abrir Imagem";
 		flag=0;
 	}
 	
-		if(tp == "w+b")
-	{
+	if(tp == "w+b") {
 		msg = "Salvar Imagem";
 		flag = 2;
 	}
-	else
-	{
+	else {
 		msg = "Arquivo";	
 	}
 	
 	const char *diretorio = uiGetDiretorio(janela, msg, flag);
-	if(diretorio == NULL)
-	{
+	if(diretorio == NULL) {
 		printf("Operacao cancelada\n");
 	}
 	
-	else if((arquivo = fopen(diretorio, tp))==NULL)
-	{
+	else if((arquivo = fopen(diretorio, tp))==NULL) {
 		printf("Arquivo '%s' nao pode ser aberto\n",diretorio);
 		erroMsgBuf = "Arquivo nao pode ser aberto.";
 	}
 	
-	else
-	{
+	else {
 		printf("O arquivo %s foi aberto\n",diretorio);
 		return arquivo;
 	}
@@ -89,8 +83,7 @@ FILE *abreArquivo(char *tp, ALLEGRO_DISPLAY *janela){
 unsigned char **alocaMatriz(int a, int l) {
 	int i;
 	unsigned char **data = (unsigned char **) malloc (sizeof(unsigned char *) * a);
-	for(i=0; i<a; i++)
-	{
+	for(i=0; i<a; i++) {
 		data[i] = (unsigned char *) malloc (sizeof(unsigned char) * l);
 	}
 	
