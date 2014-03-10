@@ -22,7 +22,7 @@ char *erroMsgBuf;//mesagem de erro gerada pelo metodo
 const int btL = 70, btA =50;//altura e largura dos botoes
 int bL, bA; //altura e largura da barra de botoes
 int jL, jA; //altura e largura da janela
-
+int corFundo = 125;
 /*Cria uma interface grafica nativa para o usuario selecionar um arquivo
 @param
 	ALLEGRO_DISPLAY *janela - janela onde ira mostrar a interface 
@@ -256,7 +256,7 @@ void resize(ALLEGRO_DISPLAY *janela, int h, int w) {
 void desenha(ALLEGRO_DISPLAY *janela, unsigned char **data, int a, int l, int x, int y) {	
 	/*reajusta o tamanho da janela para a imagem aberta*/
 	resize(janela, a, l);
-
+    al_clear_to_color(al_map_rgb(corFundo, corFundo, corFundo));
 	int i, j;
 	for (i=0; i<a; i++) {
 		for(j=0; j<l; j++) {
@@ -537,17 +537,17 @@ int main(int argc, char argv[]) {
 		printf("Erro ao inicializar biblioteca(s)!\n"); 
 		exit(0);
 	}
+	/*define tamanho da barra de botoes*/
+	
+    bL = btL * QTD_BT;
+	bA = btA;
 
 	/*define tamanho da janela*/
-	jL = 400 ;
+	jL = bL ;
 	jA = 400 ;
 
 	/*cria uma janela*/
     janela = al_create_display(jL, jA);
-
-	/*define tamanho da barra de botoes*/
-	bL = btL * QTD_BT;
-	bA = btA;
 
 	/*cria barra de botoes*/
 	if(criaMenu(botoes)==-1) {
@@ -570,7 +570,7 @@ int main(int argc, char argv[]) {
 	al_set_target_bitmap(al_get_backbuffer(janela));
 	
 	/*preenche a janela com a cor branca*/
-    al_clear_to_color(al_map_rgb(255, 255, 255));
+    al_clear_to_color(al_map_rgb(corFundo, corFundo, corFundo));
 
 	/*desenha o menu*/
 	desenhaMenu(janela, botoes);
@@ -621,7 +621,7 @@ int main(int argc, char argv[]) {
 								botoes[3].ativo=false;
 								
 								/*limpa a tela*/
-								al_clear_to_color(al_map_rgb(255, 255, 255));
+								al_clear_to_color(al_map_rgb(corFundo, corFundo, corFundo));
 								
 								/*redesenha menu*/
 								desenhaMenu(janela, botoes);
