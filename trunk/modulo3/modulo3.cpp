@@ -6,7 +6,7 @@
 #include <allegro5/allegro_primitives.h>
 #include "allegro5/allegro_image.h"
 
-#define QTD_BT 4//quantidade de botoes
+#define QTD_BT 6//quantidade de botoes
 #define QTD_VERSOES 1//quantidade de versoes suportadas
 
 /*Estrutura do botao*/
@@ -16,10 +16,20 @@ typedef struct {
 	bool ativo;//indica se o botao esta ativo
 } Botao;
 
+/* Estrutura do undo/redo */
+struct Nodo {
+       unsigned char  **data;
+       int largura, altura;
+       struct Nodo* prox;
+       struct Nodo* ante;
+};
+
+struct Nodo* head;
+
 const char VERSOES[QTD_VERSOES] = {'5'};
 char tipo[2];//tipo de PGM
 char *erroMsgBuf;//mesagem de erro gerada pelo metodo
-const int btL = 70, btA =50;//altura e largura dos botoes
+const int btL = 90, btA =25;//altura e largura dos botoes
 int bL, bA; //altura e largura da barra de botoes
 int jL, jA; //altura e largura da janela
 int corFundo = 125;
@@ -119,8 +129,8 @@ int getCabecalho(FILE *arquivo, int *altura, int *largura, int *maxCor, char *ti
 	if(buf == 'P')
 		tipo[0] = buf;
 	else {
-		printf("erro, arquivo PMG invalido\n");
-		erroMsgBuf = "Arquivo PMG invalido.";
+		printf("erro, arquivo PGM invalido\n");
+		erroMsgBuf = "Arquivo PGM invalido.";
 		return -1;
 	}
 
@@ -143,7 +153,7 @@ int getCabecalho(FILE *arquivo, int *altura, int *largura, int *maxCor, char *ti
 	buf = getc(arquivo);
 	if(buf != '\n') {
 		printf("cabecalho invalido\n");
-		erroMsgBuf = "Arquivo PMG invalido.";
+		erroMsgBuf = "Arquivo PGM invalido.";
 		return -1;
 	}
 
@@ -153,7 +163,7 @@ int getCabecalho(FILE *arquivo, int *altura, int *largura, int *maxCor, char *ti
 		*largura = buf;
 	else {
 		printf("erro ao pegar largura da imagem!\n");
-		erroMsgBuf = "Arquivo PMG invalido.";
+		erroMsgBuf = "Arquivo PGM invalido.";
 		return 0;
 	}
 
@@ -163,7 +173,7 @@ int getCabecalho(FILE *arquivo, int *altura, int *largura, int *maxCor, char *ti
 		*altura = buf;
 	else {
 		printf("erro ao pegar altura da imagem!\n");
-		erroMsgBuf = "Arquivo PMG invalido.";
+		erroMsgBuf = "Arquivo PGM invalido.";
 		return 0;
 	}
 
@@ -171,7 +181,7 @@ int getCabecalho(FILE *arquivo, int *altura, int *largura, int *maxCor, char *ti
 	buf = getc(arquivo);
 	if(buf != '\n') {
 		printf("cabecalho invalido\n");
-		erroMsgBuf = "Arquivo PMG invalido.";
+		erroMsgBuf = "Arquivo PGM invalido.";
 		return -1;
 	}
 
@@ -181,7 +191,7 @@ int getCabecalho(FILE *arquivo, int *altura, int *largura, int *maxCor, char *ti
 		*maxCor = buf;
 	else {
 		printf("erro ao pegar maxCor!\n");
-		erroMsgBuf = "Arquivo PMG invalido.";
+		erroMsgBuf = "Arquivo PGM invalido.";
 		return 0;
 	}
 
@@ -189,11 +199,11 @@ int getCabecalho(FILE *arquivo, int *altura, int *largura, int *maxCor, char *ti
 	buf = getc(arquivo);
 	if(buf != '\n') {
 		printf("cabecalho invalido\n");
-		erroMsgBuf = "Arquivo PMG invalido.";
+		erroMsgBuf = "Arquivo PGM invalido.";
 		return -1;
 	}
 
-	printf("GETCABECALHO Tipo:%s Altura:%d Largura:%d CorMax:%d\n", tipo, *altura, *largura, *maxCor);
+	printf("GETCABECALHO Tipo:%s Largura:%d Altura: %d CorMax:%d\n", tipo,  *largura, *altura, *maxCor);
 	return 0;
 }
 
@@ -434,10 +444,12 @@ int criaMenu(Botao b[]) {
 	int i;
 
 	/*carrega imagens dos botoes*/
-	b[0].img = carregaBitmapBT("carregar.bmp");
-	b[1].img = carregaBitmapBT("salvar.bmp");
-	b[2].img = carregaBitmapBT("girar_horario.bmp");
-	b[3].img = carregaBitmapBT("girar_anti.bmp");
+	b[0].img = carregaBitmapBT("carregar.png");
+	b[1].img = carregaBitmapBT("salvar.png");
+	b[2].img = carregaBitmapBT("girar_horario.png");
+	b[3].img = carregaBitmapBT("girar_anti.png");
+	b[4].img = carregaBitmapBT("undo.png");
+	b[5].img = carregaBitmapBT("redo.png");
 	
 	
 	for(i=0; i<QTD_BT;i++) {
@@ -462,9 +474,9 @@ int desenhaMenu(ALLEGRO_DISPLAY *janela, Botao bt[]) {
 	for(i=0; i<QTD_BT;i++) {
 		/*se o botao estiver inativo, escurece o botao*/
 		if(bt[i].ativo==false) {
-			r=.3;
-			g=.3;
-			b=.3;
+			r=.2;
+			g=.2;
+			b=.2;
 		}
 		else {
 			r=1;
@@ -488,8 +500,50 @@ int verificaClique(int x, int y, Botao b[]) {
 	return -1;
 }
 
+
+struct Nodo* GetNovoNodo (unsigned char **data, int lar, int alt){
+     struct Nodo* novoNodo = (struct Nodo*)malloc (sizeof(struct Nodo));
+     
+     novoNodo->data = data ;
+     novoNodo->largura = lar;
+     novoNodo->altura = alt;
+     novoNodo->ante = NULL;
+     novoNodo->prox = NULL; 
+}
+
+void InserirNodo (unsigned char **data, int lar, int alt) {
+     struct Nodo* novoNodo = GetNovoNodo(data, lar, alt);
+     if (head == NULL) {
+              head = novoNodo;
+              return;
+     }
+     head->ante = novoNodo;
+     novoNodo->prox = head;
+     head = novoNodo;     
+}
+
+
+Nodo *desfazer(){
+     //struct Nodo* temp = head;
+     //head = head->ante;
+     //return temp;
+}
+
+void Print(ALLEGRO_DISPLAY *janela) {
+     struct Nodo* temp = head;   
+     desenha(janela, temp->data, temp->altura, temp->largura, 0, bA);
+}
+
+
+
+
 /*metodo principal, gerencia a janela*/
 int main(int argc, char argv[]) {	
+    
+    ///TESTE//
+    head = NULL;    
+    int x=0;
+    
 	/*janela principal*/
     ALLEGRO_DISPLAY *janela = NULL;
 
@@ -560,6 +614,8 @@ int main(int argc, char argv[]) {
 	botoes[1].ativo=false;
 	botoes[2].ativo=false;
 	botoes[3].ativo=false;
+	botoes[4].ativo=false;
+	botoes[5].ativo=false;
 
     /*registra os eventos*/
 	al_register_event_source(filaEvento, al_get_display_event_source(janela));
@@ -592,7 +648,9 @@ int main(int argc, char argv[]) {
 			
 		
 		if(evento.type==ALLEGRO_EVENT_MOUSE_BUTTON_UP) {
-			printf("precionou botao %d\n", verificaClique(evento.mouse.x, evento.mouse.y, botoes));
+			printf("Pressionou botao %d\n", verificaClique(evento.mouse.x, evento.mouse.y, botoes));
+			
+			Nodo *temp;
 			
 			switch (verificaClique(evento.mouse.x, evento.mouse.y,botoes)) {
 				
@@ -605,6 +663,7 @@ int main(int argc, char argv[]) {
 							largura =0;
 							maxCor =0;
 							arquivoAberto = false;
+							x=0;
 						}
 						if(arquivoAberto==false) {
 							/*carrega imagem na matriz*/
@@ -619,6 +678,8 @@ int main(int argc, char argv[]) {
 								botoes[1].ativo=false;
 								botoes[2].ativo=false;
 								botoes[3].ativo=false;
+								botoes[4].ativo=false;
+	                            botoes[5].ativo=false;
 								
 								/*limpa a tela*/
 								al_clear_to_color(al_map_rgb(corFundo, corFundo, corFundo));
@@ -677,9 +738,13 @@ int main(int argc, char argv[]) {
 
 				case 2:/*gira horario*/
 					if(botoes[2].ativo==true) {
-						data = rotacao(data, &altura, &largura, 'D');
+						InserirNodo(data, largura, altura);
+                        x++;
+                        data = rotacao(data, &altura, &largura, 'D');
 						desenha(janela, data, altura, largura, 0, bA);
+						
 						botoes[1].ativo=true;
+						botoes[4].ativo=true;
 						desenhaMenu(janela, botoes);
 						al_flip_display();
 					}
@@ -690,9 +755,40 @@ int main(int argc, char argv[]) {
 
 				case 3:/*gira anti-horario*/
 					if(botoes[3].ativo==true) {
-						data = rotacao(data, &altura, &largura, 'E');
+						InserirNodo(data, largura, altura);
+                        x++;
+                        data = rotacao(data, &altura, &largura, 'E');
 						desenha(janela, data, altura, largura, 0, bA);
+						
 						botoes[1].ativo=true;
+						botoes[4].ativo=true;
+						desenhaMenu(janela, botoes);
+						al_flip_display();
+					}
+					else {
+						printf("Botao inativo\n");
+					}
+				break;
+				
+				case 4:/*Undo*/
+					if(botoes[4].ativo==true) {
+						//temp = desfazer();
+						
+                        //data = temp->data;
+                        //altura = temp->altura;
+                        //largura = temp->largura;
+                        //desenha(janela, data, altura, largura, 0, bA);
+                        
+                        Print(janela);
+					     x--;
+                        
+                         
+                        			
+						//desenha(janela, data, altura, largura, 0, bA);
+						if(x==0)
+                             botoes[4].ativo=false;
+						botoes[1].ativo=true;
+						botoes[5].ativo=true;
 						desenhaMenu(janela, botoes);
 						al_flip_display();
 					}
