@@ -24,7 +24,7 @@ struct Nodo {
        struct Nodo* ante;
 };
 
-struct Nodo* head;
+struct Nodo *head;
 
 const char VERSOES[QTD_VERSOES] = {'5'};
 char tipo[2];//tipo de PGM
@@ -477,11 +477,13 @@ int desenhaMenu(ALLEGRO_DISPLAY *janela, Botao bt[]) {
 			r=.2;
 			g=.2;
 			b=.2;
+			a=.4;
 		}
 		else {
 			r=1;
 			g=1;
 			b=1;
+			a=1;
 		}
 		/*desenha o bitmap com as cores especificadas pelo al_map_rgba_f*/
 		al_draw_tinted_bitmap(bt[i].img, al_map_rgba_f(r, g, b, a),bt[i].x ,bt[i].y, 0);
@@ -503,23 +505,27 @@ int verificaClique(int x, int y, Botao b[]) {
 
 struct Nodo* GetNovoNodo (unsigned char **data, int lar, int alt){
      struct Nodo* novoNodo = (struct Nodo*)malloc (sizeof(struct Nodo));
-     
+     novoNodo->data = alocaMatriz(alt, lar); 
      novoNodo->data = data ;
      novoNodo->largura = lar;
      novoNodo->altura = alt;
      novoNodo->ante = NULL;
-     novoNodo->prox = NULL; 
+     novoNodo->prox = NULL;
+     return novoNodo; 
 }
 
 void InserirNodo (unsigned char **data, int lar, int alt) {
      struct Nodo* novoNodo = GetNovoNodo(data, lar, alt);
+     
      if (head == NULL) {
               head = novoNodo;
-              return;
      }
-     head->ante = novoNodo;
-     novoNodo->prox = head;
-     head = novoNodo;     
+     
+     else{
+          head->ante = novoNodo;
+          novoNodo->prox = head;
+          head = novoNodo;
+     }     
 }
 
 
@@ -573,6 +579,7 @@ int main(int argc, char argv[]) {
 	/*sinaliza existencia de arquivo aberto*/
 	bool arquivoAberto = false;
  
+    Nodo *temp;
 	
 	/*inicializa biblioteca principal*/
 	if(al_init()==-1)
@@ -772,16 +779,16 @@ int main(int argc, char argv[]) {
 				
 				case 4:/*Undo*/
 					if(botoes[4].ativo==true) {
-						//temp = desfazer();
 						
-                        //data = temp->data;
-                        //altura = temp->altura;
-                        //largura = temp->largura;
-                        //desenha(janela, data, altura, largura, 0, bA);
+						
+                        data = head->data;
+                        altura = head->altura;
+                        largura = head->largura;
+                        desenha(janela, head->data, altura, largura, 0, bA);
                         
-                        Print(janela);
+                        //Print(janela);
 					     x--;
-                        
+                        head = head->prox;
                          
                         			
 						//desenha(janela, data, altura, largura, 0, bA);
