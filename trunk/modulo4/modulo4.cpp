@@ -6,9 +6,9 @@
 #include <allegro5/allegro_primitives.h>
 #include "allegro5/allegro_image.h"
 
-#define QTD_BT 6//quantidade de botoes
+#define QTD_BT 7//quantidade de botoes
 #define QTD_VERSOES 1//quantidade de versoes suportadas
-
+#define QTD_INTERVALO 244//quantidade maxima de intervalos
 /*Estrutura do botao*/
 typedef struct {
 	int x, y; /*coordenadas*/
@@ -54,7 +54,7 @@ FILE *abreArquivo(char *tp, ALLEGRO_DISPLAY *janela) {
 	FILE *arquivo;
 	char *msg;
 	int flag=0;
-	
+		
 	if(tp == "r+b") {
 		msg = "Abrir Imagem";
 		flag=0;
@@ -84,6 +84,7 @@ FILE *abreArquivo(char *tp, ALLEGRO_DISPLAY *janela) {
 	}
 	return NULL;
 }
+
 
 /*aloca memoria para a matriz
 @param
@@ -450,6 +451,7 @@ int criaMenu(Botao b[]) {
 	b[3].img = carregaBitmapBT("girar_anti.png");
 	b[4].img = carregaBitmapBT("undo.png");
 	b[5].img = carregaBitmapBT("redo.png");
+	b[6].img = carregaBitmapBT("alteraCor.png");
 	
 	
 	for(i=0; i<QTD_BT;i++) {
@@ -528,6 +530,41 @@ void InserirNodo (unsigned char **data, int lar, int alt) {
      }     
 }
 
+int alteraImagem(ALLEGRO_DISPLAY *janela, Nodo *no, int maxCor){
+	int qtd = 0, pixel;
+	int i, j, k;
+	
+	FILE *arquivo = abreArquivo("r+b", janela);
+	if(arquivo==NULL)  return -2;
+	
+	if(fscanf(arquivo, "%d", &qtd) == -1){
+		printf("Texto formatado errado\n");
+		return -1;
+	}
+
+	int intervalo[QTD_INTERVALO];
+	for(i=0; i < qtd; i++){
+		intervalo[i] = (maxCor/qtd-1)*i;			
+	}
+	
+	for(j=0; j < no->altura; j++){
+		for(i=0; i < no->largura; i++){
+			int aux = maxCor;
+			int flag = -1;
+			
+			for(k=0; k < qtd-1; k++){
+				if(no->data[j][i]-intervalo[k] < aux){
+					flag = k;
+					aux = no->data[j][i]-intervalo[k];
+				}
+			}
+			
+			no->data[i][j] = intervalo[flag];
+		}
+	}
+	return 0;
+}
+
 /*metodo principal, gerencia a janela*/
 int main(int argc, char argv[]) {	
     
@@ -603,6 +640,7 @@ int main(int argc, char argv[]) {
 	botoes[3].ativo=false;
 	botoes[4].ativo=false;
 	botoes[5].ativo=false;
+	botoes[6].ativo=false;
 
     /*registra os eventos*/
 	al_register_event_source(filaEvento, al_get_display_event_source(janela));
@@ -668,6 +706,7 @@ int main(int argc, char argv[]) {
 								botoes[3].ativo=false;
 								botoes[4].ativo=false;
 	                            botoes[5].ativo=false;
+	                            botoes[6].ativo=false;
 								
 								/*limpa a tela*/
 								al_clear_to_color(al_map_rgb(corFundo, corFundo, corFundo));
@@ -686,7 +725,8 @@ int main(int argc, char argv[]) {
 							/*ativa botoes*/
 							botoes[2].ativo=true;
 							botoes[3].ativo=true;
-
+                            botoes[6].ativo=true;
+                            
 							/*desenha a imagem na janela, 0 e bA sao as coordenadas x,y de onde vai comeca desenhar a imagem
 							sendo que bA representa a altura do menu*/
 							desenha(janela, head->data, head->altura, head->largura, 0, bA);
@@ -733,7 +773,7 @@ int main(int argc, char argv[]) {
 						desenha(janela, head->data, head->altura, head->largura, 0, bA);
 						
 						botoes[1].ativo=true;
-						botoes[4].ativo=true;
+						botoes[4].ativo=true;						
 						desenhaMenu(janela, botoes);
 						al_flip_display();
 					}
@@ -772,8 +812,8 @@ int main(int argc, char argv[]) {
 
 						if(undo==0)
 							botoes[4].ativo=false;
-						botoes[1].ativo=true;
-						botoes[5].ativo=true;
+    						botoes[1].ativo=true;
+    						botoes[5].ativo=true;
 						desenhaMenu(janela, botoes);
 						al_flip_display();
 					}
@@ -792,7 +832,8 @@ int main(int argc, char argv[]) {
 					     redo--;
 
 						if(redo==0)
-                        botoes[5].ativo=false;
+                            botoes[5].ativo=false;
+                            
 						botoes[1].ativo=true;
 						botoes[4].ativo=true;
 						desenhaMenu(janela, botoes);
@@ -802,7 +843,19 @@ int main(int argc, char argv[]) {
 						printf("Botao inativo\n");
 					}
 				break;
-		
+				
+				case 6:                     
+					if(botoes[6].ativo=true){
+                        InserirNodo(head->data, head->largura, head->altura);
+                        undo++;
+                        redo=0;
+                        alteraImagem(janela, head, maxCor);
+                    }
+                    else {
+                         printf("Botao inativo\n");
+                    }
+	            break;
+	            
 				default:
 				break;
 			}//fim switch
@@ -824,5 +877,4 @@ int main(int argc, char argv[]) {
 	al_destroy_display(janela);
     return 0;
 }
-
 
