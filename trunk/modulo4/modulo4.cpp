@@ -39,7 +39,7 @@ int corFundo = 125;
 */
 char * uiGetDiretorio(ALLEGRO_DISPLAY *janela, const char *msg, int flag) {
 	ALLEGRO_FILECHOOSER *file_dialog;
-	file_dialog = al_create_native_file_dialog("c:/", msg, "*.pgm*",flag);
+	file_dialog = al_create_native_file_dialog("c:/", msg, "*.*",flag);
 	al_show_native_file_dialog(janela, file_dialog);
 	return (char*)al_get_native_file_dialog_path(file_dialog, 0);
 }
@@ -530,16 +530,19 @@ void InserirNodo (unsigned char **data, int lar, int alt) {
      }     
 }
 
-int alteraImagem(ALLEGRO_DISPLAY *janela, Nodo *no, int maxCor){
+unsigned char **alteraImagem(ALLEGRO_DISPLAY *janela, unsigned char **data, int altura, int largura, int maxCor){
 	int qtd = 0, pixel;
 	int i, j, k;
+	unsigned char **matriz;
+	
+	matriz = alocaMatriz(altura, largura);
 	
 	FILE *arquivo = abreArquivo("r+b", janela);
-	if(arquivo==NULL)  return -2;
+	if(arquivo==NULL)  return NULL;
 	
 	if(fscanf(arquivo, "%d", &qtd) == -1){
 		printf("Texto formatado errado\n");
-		return -1;
+		return NULL;
 	}
 
 	int intervalo[QTD_INTERVALO];
@@ -547,22 +550,24 @@ int alteraImagem(ALLEGRO_DISPLAY *janela, Nodo *no, int maxCor){
 		intervalo[i] = (maxCor/qtd-1)*i;			
 	}
 	
-	for(j=0; j < no->altura; j++){
-		for(i=0; i < no->largura; i++){
+	for(j=0; j < altura; j++){
+		for(i=0; i < largura; i++){
 			int aux = maxCor;
 			int flag = -1;
 			
 			for(k=0; k < qtd-1; k++){
-				if(no->data[j][i]-intervalo[k] < aux){
+				if(abs(data[j][i]-intervalo[k]) < aux){
 					flag = k;
-					aux = no->data[j][i]-intervalo[k];
+					aux = abs(data[j][i]-intervalo[k]);
 				}
 			}
-			
-			no->data[i][j] = intervalo[flag];
+			//printf("aux%d flag%d\n %d",aux,flag);
+			//system("pause");
+			matriz[j][i] = intervalo[flag];
 		}
 	}
-	return 0;
+	
+	return matriz;
 }
 
 /*metodo principal, gerencia a janela*/
@@ -723,6 +728,7 @@ int main(int argc, char argv[]) {
 							arquivoAberto = true;
 							
 							/*ativa botoes*/
+							botoes[1].ativo=true;
 							botoes[2].ativo=true;
 							botoes[3].ativo=true;
                             botoes[6].ativo=true;
@@ -830,7 +836,7 @@ int main(int argc, char argv[]) {
                         desenha(janela, head->data, head->altura, head->largura, 0, bA);
 
 					     redo--;
-
+                        undo++;
 						if(redo==0)
                             botoes[5].ativo=false;
                             
@@ -849,7 +855,13 @@ int main(int argc, char argv[]) {
                         InserirNodo(head->data, head->largura, head->altura);
                         undo++;
                         redo=0;
-                        alteraImagem(janela, head, maxCor);
+                        head->data = alteraImagem(janela, head->prox->data, head->prox->altura, head->prox->largura,  maxCor);
+                        botoes[1].ativo=true;
+                        botoes[4].ativo=true;
+                        desenha(janela, head->data, head->altura, head->largura, 0, bA);
+                        desenhaMenu(janela, botoes);
+						al_flip_display();
+						
                     }
                     else {
                          printf("Botao inativo\n");
