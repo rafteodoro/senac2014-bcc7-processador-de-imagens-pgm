@@ -539,23 +539,26 @@ unsigned char **alteraImagem(ALLEGRO_DISPLAY *janela, unsigned char **data, int 
 	
 	FILE *arquivo = abreArquivo("r+b", janela);
 	if(arquivo==NULL)  return NULL;
-	
-	if(fscanf(arquivo, "%d", &qtd) == -1){
+
+	if(fscanf(arquivo, "%d", &qtd) != 1){
 		printf("Texto formatado errado\n");
+		fclose(arquivo);
 		return NULL;
 	}
 
+    fclose(arquivo);
 	int intervalo[QTD_INTERVALO];
 	for(i=0; i < qtd; i++){
-		intervalo[i] = (maxCor/qtd-1)*i;			
+		intervalo[i] = (maxCor/(qtd-1))*i;	
+            printf("qtd = %d, maxcor = %d intervalo %d\n", qtd, maxCor, intervalo[i]);		
 	}
-	
+
 	for(j=0; j < altura; j++){
 		for(i=0; i < largura; i++){
 			int aux = maxCor;
 			int flag = -1;
 			
-			for(k=0; k < qtd-1; k++){
+			for(k=0; k < qtd; k++){
 				if(abs(data[j][i]-intervalo[k]) < aux){
 					flag = k;
 					aux = abs(data[j][i]-intervalo[k]);
