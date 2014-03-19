@@ -533,7 +533,7 @@ int main(int argc, char argv[]) {
     
     ///TESTE//
     head = (struct Nodo*)malloc (sizeof(struct Nodo));    
-    int x=0;
+    int undo=0, redo=0;
     
 	/*janela principal*/
     ALLEGRO_DISPLAY *janela = NULL;
@@ -553,7 +553,6 @@ int main(int argc, char argv[]) {
 	/*definicoes do arquivo*/
 	int maxCor = 0;//inteiro que representa tonalidade de cor maxima
 
-	
 	/*sinaliza fechamento da janela*/
 	bool fechaJanela = false;
 	
@@ -651,7 +650,8 @@ int main(int argc, char argv[]) {
 							head->largura =0;
 							maxCor =0;
 							arquivoAberto = false;
-							x=0;
+							undo=0;
+							redo=0;
 						}
 						if(arquivoAberto==false) {
 							/*carrega imagem na matriz*/
@@ -727,7 +727,8 @@ int main(int argc, char argv[]) {
 				case 2:/*gira horario*/
 					if(botoes[2].ativo==true) {
 						InserirNodo(head->data, head->largura, head->altura);
-                        x++;
+                        undo++;
+						redo=0;
 						head->data = rotacao(head->prox->data, &head->altura, &head->largura, 'D');
 						desenha(janela, head->data, head->altura, head->largura, 0, bA);
 						
@@ -744,7 +745,8 @@ int main(int argc, char argv[]) {
 				case 3:/*gira anti-horario*/
 					if(botoes[3].ativo==true) {
 						InserirNodo(head->data, head->largura, head->altura);
-                        x++;
+                        undo++;
+						redo=0;
                         head->data = rotacao(head->prox->data, &head->altura, &head->largura, 'E');
 						desenha(janela, head->data, head->altura, head->largura, 0, bA);
 						
@@ -764,17 +766,35 @@ int main(int argc, char argv[]) {
 						
                         head = head->prox;
                         desenha(janela, head->data, head->altura, head->largura, 0, bA);
-                        
-                        //Print(janela);
-					     x--;
-                        
-                         
-                        			
-						//desenha(janela, data, altura, largura, 0, bA);
-						if(x==0)
-                             botoes[4].ativo=false;
+                             
+					     undo--;
+						 redo++;
+
+						if(undo==0)
+							botoes[4].ativo=false;
 						botoes[1].ativo=true;
 						botoes[5].ativo=true;
+						desenhaMenu(janela, botoes);
+						al_flip_display();
+					}
+					else {
+						printf("Botao inativo\n");
+					}
+				break;
+
+				case 5:/*Redo*/
+					if(botoes[5].ativo==true) {
+						
+						
+						head = head->ante;
+                        desenha(janela, head->data, head->altura, head->largura, 0, bA);
+
+					     redo--;
+
+						if(redo==0)
+                        botoes[5].ativo=false;
+						botoes[1].ativo=true;
+						botoes[4].ativo=true;
 						desenhaMenu(janela, botoes);
 						al_flip_display();
 					}
