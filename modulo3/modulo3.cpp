@@ -120,7 +120,7 @@ void desalocaMatriz(unsigned char **data, int a) {
 	int *maxCor -  inteiro que representa tonalidade de cor maxima
 	char *tipo - tipo de PGM
 */
-int getCabecalho(FILE *arquivo, int *altura, int *largura, int *maxCor, char *tipo) {
+int getCabecalho(FILE *arquivo, int *maxCor, char *tipo, Nodo *no) {
 	
 	int i, buf = 0;
 
@@ -160,7 +160,7 @@ int getCabecalho(FILE *arquivo, int *altura, int *largura, int *maxCor, char *ti
 	/*verifica largura*/
 	fscanf(arquivo, "%d", &buf); 
 	if(buf>=0)
-		*largura = buf;
+		no->largura = buf;
 	else {
 		printf("erro ao pegar largura da imagem!\n");
 		erroMsgBuf = "Arquivo PGM invalido.";
@@ -170,7 +170,7 @@ int getCabecalho(FILE *arquivo, int *altura, int *largura, int *maxCor, char *ti
 	/*verifica altura*/
 	fscanf(arquivo, "%d", &buf); 
 	if(buf>=0)
-		*altura = buf;
+		no->altura = buf;
 	else {
 		printf("erro ao pegar altura da imagem!\n");
 		erroMsgBuf = "Arquivo PGM invalido.";
@@ -203,7 +203,7 @@ int getCabecalho(FILE *arquivo, int *altura, int *largura, int *maxCor, char *ti
 		return -1;
 	}
 
-	printf("GETCABECALHO Tipo:%s Largura:%d Altura: %d CorMax:%d\n", tipo,  *largura, *altura, *maxCor);
+	printf("GETCABECALHO Tipo:%s Largura:%d Altura: %d CorMax:%d\n", tipo,  no->largura, no->altura, *maxCor);
 	return 0;
 }
 
@@ -284,7 +284,7 @@ void desenha(ALLEGRO_DISPLAY *janela, unsigned char **data, int a, int l, int x,
 	char *tipo - tipo de PGM
 	unsigned char ** data - matriz onde sera armazenado os bits
 */
-int carregaImagem (ALLEGRO_DISPLAY *janela, int *altura,int *largura, int *maxCor, char *tipo, unsigned char ***data) {
+int carregaImagem (ALLEGRO_DISPLAY *janela, int *maxCor, char *tipo, Nodo *no) {
 	FILE *arquivo;
 
 	/*ponteiro para o arquivo de imagem no disco*/
@@ -292,15 +292,15 @@ int carregaImagem (ALLEGRO_DISPLAY *janela, int *altura,int *largura, int *maxCo
 	if(arquivo==NULL) return -2;
 
 	/*pega tamanho e tipo da imagem(cabecalho)*/
-	if(getCabecalho(arquivo, altura, largura, maxCor, tipo)==-1) {
+	if(getCabecalho(arquivo, maxCor, tipo, no)==-1) {
 		return -1;
 	}
 
 	/*aloca memoria para a matriz*/
-	*data = alocaMatriz(*altura, *largura);
+	no->data = alocaMatriz(no->altura, no->largura);
 
 	/*armazena os bits na matriz*/
-	if(armazenaDados(arquivo, *data, *altura, *largura, *maxCor)==-1) {
+	if(armazenaDados(arquivo, no->data, no->altura, no->largura, *maxCor)==-1) {
 		int resposta = 0;
 		resposta = al_show_native_message_box(janela, "Alerta", erroMsgBuf, "Deseja continuar?", NULL, ALLEGRO_MESSAGEBOX_OK_CANCEL);
 		
@@ -349,11 +349,11 @@ int gravaDados(FILE *out, unsigned char **data, int altura, int largura, int max
 	int i, j;
 	for(i=0; i<altura; i++) {
 		for(j=0; j<largura; j++){
-			if(data[i][j] <0 || data[i][j]>maxCor) {
+			//if(data[i][j] <0 || data[i][j]>maxCor) {
 				printf("Erro! dados inconsistentes\n");
 				erroMsgBuf = "Erro de dados na gravacao da imagem.";
-				return -1; 
-			}
+			//	return -1; 
+			//}
 			putc(data[i][j], out);
 		}
 	}
@@ -402,7 +402,7 @@ unsigned char **rotacao(unsigned char **data, int *altura, int *largura, char se
             aux--;
         }
     }
-    desalocaMatriz(data, *altura);
+    
     j = *altura;
     *altura = *largura;
     *largura = j;    
@@ -528,26 +528,11 @@ void InserirNodo (unsigned char **data, int lar, int alt) {
      }     
 }
 
-
-Nodo *desfazer(){
-     //struct Nodo* temp = head;
-     //head = head->ante;
-     //return temp;
-}
-
-void Print(ALLEGRO_DISPLAY *janela) {
-     struct Nodo* temp = head;   
-     desenha(janela, temp->data, temp->altura, temp->largura, 0, bA);
-}
-
-
-
-
 /*metodo principal, gerencia a janela*/
 int main(int argc, char argv[]) {	
     
     ///TESTE//
-    head = NULL;    
+    head = (struct Nodo*)malloc (sizeof(struct Nodo));    
     int x=0;
     
 	/*janela principal*/
@@ -566,12 +551,8 @@ int main(int argc, char argv[]) {
 	Botao botoes[QTD_BT];
 	
 	/*definicoes do arquivo*/
-	int altura = 0,//altura da imagem
-		largura = 0, //largura da imagem
-		maxCor = 0;//inteiro que representa tonalidade de cor maxima
+	int maxCor = 0;//inteiro que representa tonalidade de cor maxima
 
-	/*estrutura para armazenar os bits do arquivo*/
-	unsigned char **data = NULL;
 	
 	/*sinaliza fechamento da janela*/
 	bool fechaJanela = false;
@@ -665,16 +646,16 @@ int main(int argc, char argv[]) {
 					if(botoes[0].ativo==true) {	
 						/*caso algum arquivo estiver aberto, limpa dados*/
 						if(arquivoAberto==true) {
-							desalocaMatriz(data, altura);
-							altura =0;
-							largura =0;
+							desalocaMatriz(head->data, head->altura);
+							head->altura =0;
+							head->largura =0;
 							maxCor =0;
 							arquivoAberto = false;
 							x=0;
 						}
 						if(arquivoAberto==false) {
 							/*carrega imagem na matriz*/
-							int resposta = carregaImagem (janela, &altura,&largura, &maxCor, tipo, &data);
+							int resposta = carregaImagem (janela, &maxCor, tipo, head);
 							if(resposta <0) {
 								if(resposta == -1)//caso reposta seja -2, a mesangem de erro ja foi tratada pelo metodo.
 									al_show_native_message_box(janela, "Erro", "Erro ao abrir imagem.", erroMsgBuf, NULL, ALLEGRO_MESSAGEBOX_ERROR);
@@ -708,7 +689,7 @@ int main(int argc, char argv[]) {
 
 							/*desenha a imagem na janela, 0 e bA sao as coordenadas x,y de onde vai comeca desenhar a imagem
 							sendo que bA representa a altura do menu*/
-							desenha(janela, data, altura, largura, 0, bA);
+							desenha(janela, head->data, head->altura, head->largura, 0, bA);
 							
 							/*redesenha menu*/
 							desenhaMenu(janela, botoes);
@@ -724,7 +705,7 @@ int main(int argc, char argv[]) {
 			
 				case 1:/*grava imagem*/
 					if(botoes[1].ativo == true) {
-						int resposta = gravaImagem(janela, tipo, altura, largura, maxCor, data);
+						int resposta = gravaImagem(janela, tipo, head->altura, head->largura, maxCor, head->data);
 						if(resposta ==-1 ) {
 							printf("Erro ao salvar imagem!\n");
 							al_show_native_message_box(janela, "Erro", "Erro ao salvar imagem.", erroMsgBuf, NULL, ALLEGRO_MESSAGEBOX_ERROR);
@@ -745,10 +726,10 @@ int main(int argc, char argv[]) {
 
 				case 2:/*gira horario*/
 					if(botoes[2].ativo==true) {
-						InserirNodo(data, largura, altura);
+						InserirNodo(head->data, head->largura, head->altura);
                         x++;
-                        data = rotacao(data, &altura, &largura, 'D');
-						desenha(janela, data, altura, largura, 0, bA);
+						head->data = rotacao(head->prox->data, &head->altura, &head->largura, 'D');
+						desenha(janela, head->data, head->altura, head->largura, 0, bA);
 						
 						botoes[1].ativo=true;
 						botoes[4].ativo=true;
@@ -762,10 +743,10 @@ int main(int argc, char argv[]) {
 
 				case 3:/*gira anti-horario*/
 					if(botoes[3].ativo==true) {
-						InserirNodo(data, largura, altura);
+						InserirNodo(head->data, head->largura, head->altura);
                         x++;
-                        data = rotacao(data, &altura, &largura, 'E');
-						desenha(janela, data, altura, largura, 0, bA);
+                        head->data = rotacao(head->prox->data, &head->altura, &head->largura, 'E');
+						desenha(janela, head->data, head->altura, head->largura, 0, bA);
 						
 						botoes[1].ativo=true;
 						botoes[4].ativo=true;
@@ -781,14 +762,12 @@ int main(int argc, char argv[]) {
 					if(botoes[4].ativo==true) {
 						
 						
-                        data = head->data;
-                        altura = head->altura;
-                        largura = head->largura;
-                        desenha(janela, head->data, altura, largura, 0, bA);
+                        head = head->prox;
+                        desenha(janela, head->data, head->altura, head->largura, 0, bA);
                         
                         //Print(janela);
 					     x--;
-                        head = head->prox;
+                        
                          
                         			
 						//desenha(janela, data, altura, largura, 0, bA);
@@ -811,8 +790,8 @@ int main(int argc, char argv[]) {
 	}//fim while
 
 	/*limpeza*/
-	if(data!=NULL && arquivoAberto == true) {
-		desalocaMatriz(data, altura);
+	if(head->data!=NULL && arquivoAberto == true) {
+		desalocaMatriz(head->data, head->altura);
 	}
 	int i;
 	for(i=0; i<QTD_BT; i++){
