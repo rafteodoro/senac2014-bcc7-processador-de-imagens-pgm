@@ -6,7 +6,7 @@
 #include <allegro5/allegro_primitives.h>
 #include "allegro5/allegro_image.h"
 
-#define QTD_BT 7//quantidade de botoes
+#define QTD_BT 8//quantidade de botoes
 #define QTD_BT_FILEIRA 6//quantidade de botoes
 #define QTD_VERSOES 1//quantidade de versoes suportadas
 #define QTD_INTERVALO 244//quantidade maxima de intervalos
@@ -464,6 +464,7 @@ int criaMenu(Botao b[]) {
 	b[4].img = carregaBitmapBT("undo.png");
 	b[5].img = carregaBitmapBT("redo.png");
 	b[6].img = carregaBitmapBT("alteraCor.png");
+	b[7].img = carregaBitmapBT("dithering.png");
 	
 	for(i=0; i<QTD_BT;i++) {
 		if(b[i].img==NULL)/*verifica se todos os botoes foram carregados com sucesso*/
@@ -518,7 +519,6 @@ int verificaClique(int x, int y, Botao b[]) {
 
 struct Nodo* GetNovoNodo (unsigned char **data, int lar, int alt){
      struct Nodo* novoNodo = (struct Nodo*)malloc (sizeof(struct Nodo));
-     novoNodo->data = alocaMatriz(alt, lar); 
      novoNodo->data = data ;
      novoNodo->largura = lar;
      novoNodo->altura = alt;
@@ -552,6 +552,7 @@ unsigned char **reducaoCores(unsigned char **data, int altura, int largura, int 
 	if((arquivo = fopen(diretorio, "r+b"))==NULL) {
 		printf("Arquivo '%s' nao pode ser aberto\n",diretorio);
 		erroMsgBuf = "Arquivo cor.txt nao pode ser encontrado.";
+		desalocaMatriz(matriz, altura);
 		fclose(arquivo);
 		return NULL;
 	}
@@ -559,6 +560,7 @@ unsigned char **reducaoCores(unsigned char **data, int altura, int largura, int 
 	if(fscanf(arquivo, "%d", &qtd) != 1){
 		printf("Texto formatado errado\n");
 		erroMsgBuf = "Arquivo de configuracao invalido.";
+		desalocaMatriz(matriz, altura);
 		fclose(arquivo);
 		return NULL;
 	}
@@ -566,11 +568,12 @@ unsigned char **reducaoCores(unsigned char **data, int altura, int largura, int 
 	if(qtd <2 || qtd > maxCor -1){
         printf("a qtd cor nao esta entre 2 e %d, qtd lido:%d\n",maxCor, qtd);
 		erroMsgBuf = "Arquivo de configuracao invalido.";
+		desalocaMatriz(matriz, altura);
 		fclose(arquivo);
         return NULL;       
 	}
 
-    
+    fclose(arquivo);
 	int intervalo[QTD_INTERVALO];
 	for(i=0; i < qtd; i++){
 		intervalo[i] = (maxCor/(qtd-1))*i;	
@@ -588,21 +591,50 @@ unsigned char **reducaoCores(unsigned char **data, int altura, int largura, int 
 					aux = abs(data[j][i]-intervalo[k]);
 				}
 			}
-			//printf("aux%d flag%d\n %d",aux,flag);
-			//system("pause");
 			matriz[j][i] = intervalo[flag];
 		}
 	}
-	fclose(arquivo);
+	
 	return matriz;
 }
 
-unsigned char **reducaoCores(ALLEGRO_DISPLAY *janela, unsigned char **data, int altura, int largura, int maxCor){
-	unsigned char **matrix = alocaMatriz(altura, largura);
-	//matrix = reducaoCores()
-	return NULL;
-}
+unsigned char **dithering(unsigned char **data, int altura, int largura, int maxCor){
+	int i,j;
+	unsigned char **r, **matriz, antigo;
+	double erro;
 
+	matriz = alocaMatriz(altura, largura);
+	r = reducaoCores(data, altura, largura, maxCor);
+	
+	if(r==NULL){
+		desalocaMatriz(matriz, altura);
+		return NULL;
+	}
+
+	for(i=0; i<altura-1; i++){
+		for(j=0; j<largura-1; j++){
+			antigo = data[i][j];
+			matriz[i][j] = r[i][j];
+			erro = antigo - matriz[i][j];
+
+			double buf = (7.0/16.0) * erro;		
+			matriz[i][j+1] = matriz[i][j+1] + buf;
+	
+			if (j!=0){
+				buf=(3.0/16.0) * erro;
+				matriz[i+1][j-1] = matriz[i+1][j-1] + buf;
+			}
+			
+			buf=(5.0/16.0) * erro;
+			matriz[i+1][j] = matriz[i+1][j] + buf;
+			
+			buf = ((1.0/16.0) * erro);
+			matriz[i+1][j+1] = matriz[i+1][j+1] + buf;
+		}
+	}
+	
+	return matriz;
+}
 
 /*metodo principal, gerencia a janela*/
 int main(int argc, char argv[]) {	
@@ -673,13 +705,11 @@ int main(int argc, char argv[]) {
 	}
 
 	/*define botoes ativos e inativos*/
+	int i;	
+	for(i=0; i< QTD_BT; i++)
+		botoes[i].ativo=false;	
+	
 	botoes[0].ativo=true;
-	botoes[1].ativo=false;
-	botoes[2].ativo=false;
-	botoes[3].ativo=false;
-	botoes[4].ativo=false;
-	botoes[5].ativo=false;
-	botoes[6].ativo=false;
 
     /*registra os eventos*/
 	al_register_event_source(filaEvento, al_get_display_event_source(janela));
@@ -748,6 +778,7 @@ int main(int argc, char argv[]) {
 								botoes[4].ativo=false;
 	                            botoes[5].ativo=false;
 	                            botoes[6].ativo=false;
+								botoes[7].ativo=false;
 								
 								/*limpa a tela*/
 								al_clear_to_color(al_map_rgb(corFundo, corFundo, corFundo));
@@ -768,6 +799,7 @@ int main(int argc, char argv[]) {
 							botoes[2].ativo=true;
 							botoes[3].ativo=true;
                             botoes[6].ativo=true;
+							botoes[7].ativo=true;
                             
 							/*desenha a imagem na janela, 0 e bA sao as coordenadas x,y de onde vai comeca desenhar a imagem
 							sendo que bA representa a altura do menu*/
@@ -893,8 +925,10 @@ int main(int argc, char argv[]) {
                         InserirNodo(head->data, head->largura, head->altura);
                         head->data = reducaoCores(head->prox->data, head->prox->altura, head->prox->largura,  maxCor);
 						if(head->data==NULL){
-							al_show_native_message_box(janela, "Erro", "Erro ao carregar arquivo de configuracao de cores.", erroMsgBuf, NULL, ALLEGRO_MESSAGEBOX_ERROR);	
+							al_show_native_message_box(janela, "Erro", "Erro ao carregar arquivo de configuracao de cores.", erroMsgBuf, NULL, ALLEGRO_MESSAGEBOX_ERROR);
 							head = head->prox;
+							free(head->ante);
+							head->ante=NULL;
                             break;
 						}
 				        undo++;
@@ -911,6 +945,31 @@ int main(int argc, char argv[]) {
                     }
 	            break;
 	            
+				case 7:
+					if(botoes[7].ativo==true){
+						InserirNodo(head->data, head->largura, head->altura);
+                        head->data = dithering(head->prox->data, head->prox->altura, head->prox->largura,  maxCor);
+						if(head->data==NULL){
+							al_show_native_message_box(janela, "Erro", "Erro dithering", erroMsgBuf, NULL, ALLEGRO_MESSAGEBOX_ERROR);
+							head = head->prox;
+							free(head->ante);
+							head->ante=NULL;
+                            break;
+						}
+				        undo++;
+                        redo=0;
+						botoes[1].ativo=true;
+                        botoes[4].ativo=true;
+						botoes[5].ativo = false;
+                        desenha(janela, head->data, head->altura, head->largura, (bL - head->largura)/2, bA);
+                        desenhaMenu(janela, botoes);
+						al_flip_display();	
+					}
+					else {
+                         printf("Botao inativo\n");
+                    }
+				break;
+
 				default:
 				break;
 			}//fim switch
@@ -921,7 +980,7 @@ int main(int argc, char argv[]) {
 	if(head->data!=NULL && arquivoAberto == true) {
 		desalocaMatriz(head->data, head->altura);
 	}
-	int i;
+	
 	for(i=0; i<QTD_BT; i++){
 		al_destroy_bitmap(botoes[i].img);
 	}
