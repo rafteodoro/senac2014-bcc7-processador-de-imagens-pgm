@@ -558,8 +558,16 @@ unsigned char **reducaoCores(unsigned char **data, int altura, int largura, int 
 
 	if(fscanf(arquivo, "%d", &qtd) != 1){
 		printf("Texto formatado errado\n");
+		erroMsgBuf = "Arquivo de configuracao invalido.";
 		fclose(arquivo);
 		return NULL;
+	}
+	
+	if(qtd <2 || qtd > maxCor -1){
+        printf("a qtd cor nao esta entre 2 e %d, qtd lido:%d\n",maxCor, qtd);
+		erroMsgBuf = "Arquivo de configuracao invalido.";
+		fclose(arquivo);
+        return NULL;       
 	}
 
     
@@ -883,14 +891,14 @@ int main(int argc, char argv[]) {
 				case 6:                     
 					if(botoes[6].ativo==true){
                         InserirNodo(head->data, head->largura, head->altura);
-                        undo++;
-                        redo=0;
                         head->data = reducaoCores(head->prox->data, head->prox->altura, head->prox->largura,  maxCor);
 						if(head->data==NULL){
 							al_show_native_message_box(janela, "Erro", "Erro ao carregar arquivo de configuracao de cores.", erroMsgBuf, NULL, ALLEGRO_MESSAGEBOX_ERROR);	
-							break;
+							head = head->prox;
+                            break;
 						}
-						
+				        undo++;
+                        redo=0;
 						botoes[1].ativo=true;
                         botoes[4].ativo=true;
 						botoes[5].ativo = false;
