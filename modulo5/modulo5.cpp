@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <fcntl.h>
+#include <math.h>
 #include <allegro5/allegro.h>
 #include <allegro5/allegro_native_dialog.h>
 #include <allegro5/allegro_primitives.h>
@@ -598,11 +599,30 @@ unsigned char **reducaoCores(unsigned char **data, int altura, int largura, int 
 	return matriz;
 }
 
+int normalizacao(double x){
+if(x>255)
+return 255;
+
+if(x<0)
+return 0;
+
+double ant = x;
+
+x -= (int)x;//retira a parte inteira
+
+if(x>.5)//se a parte fracionaria for maior que 0.5, arredonda para cima
+return ceil(ant);
+
+else//se nao arredondada para baixo
+return floor(ant);	
+}
+
 unsigned char **dithering(unsigned char **data, int altura, int largura, int maxCor){
 	int i, j, k, qtd=0, pixel;
 	unsigned char **matriz, antigo;
 	double erro;
 
+    matriz = alocaMatriz(altura, largura);
 	const char *diretorio = "cor.txt";
 	FILE *arquivo;
 
@@ -637,7 +657,7 @@ unsigned char **dithering(unsigned char **data, int altura, int largura, int max
             //printf("qtd = %d, maxcor = %d intervalo %d\n", qtd, maxCor, intervalo[i]);		
 	}
 
-	matriz = alocaMatriz(altura, largura);
+	
 	
 	for(i=0; i<altura; i++)
 		for(j=0; j<largura; j++)
@@ -660,18 +680,18 @@ unsigned char **dithering(unsigned char **data, int altura, int largura, int max
 			erro = antigo - matriz[i][j];
 
 			double buf = (7.0/16.0) * erro;		
-			matriz[i][j+1] += buf;
+			matriz[i][j+1] += normalizacao(buf);
 	
 			if (j!=0){
 				buf=(3.0/16.0) * erro;
-				matriz[i+1][j-1] += buf;
+				matriz[i+1][j-1] += normalizacao(buf);
 			}
 			
 			buf=(5.0/16.0) * erro;
-			matriz[i+1][j] += buf;
+			matriz[i+1][j] += normalizacao(buf);
 			
 			buf = ((1.0/16.0) * erro);
-			matriz[i+1][j+1] += buf;
+			matriz[i+1][j+1] += normalizacao(buf);
 		}
 	}
 	
@@ -971,6 +991,8 @@ int main(int argc, char argv[]) {
 							head = head->prox;
 							free(head->ante);
 							head->ante=NULL;
+							desenhaMenu(janela, botoes);
+					     	al_flip_display();	
                             break;
 						}
 				        undo++;
@@ -992,10 +1014,12 @@ int main(int argc, char argv[]) {
 						InserirNodo(head->data, head->largura, head->altura);
                         head->data = dithering(head->prox->data, head->prox->altura, head->prox->largura,  maxCor);
 						if(head->data==NULL){
-							al_show_native_message_box(janela, "Erro", "Erro dithering", erroMsgBuf, NULL, ALLEGRO_MESSAGEBOX_ERROR);
+							al_show_native_message_box(janela, "Erro", "Erro ao carregar arquivo de configuracao de cores.", erroMsgBuf, NULL, ALLEGRO_MESSAGEBOX_ERROR);
 							head = head->prox;
 							free(head->ante);
 							head->ante=NULL;
+							desenhaMenu(janela, botoes);
+					     	al_flip_display();	
                             break;
 						}
 				        undo++;
