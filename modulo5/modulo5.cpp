@@ -600,21 +600,21 @@ unsigned char **reducaoCores(unsigned char **data, int altura, int largura, int 
 }
 
 int normalizacao(double x){
-if(x>255)
-return 255;
-
-if(x<0)
-return 0;
-
-double ant = x;
-
-x -= (int)x;//retira a parte inteira
-
-if(x>.5)//se a parte fracionaria for maior que 0.5, arredonda para cima
-return ceil(ant);
-
-else//se nao arredondada para baixo
-return floor(ant);	
+    if(x>255)
+        return 255;
+    
+    if(x<0)
+        return 0;
+    
+    double ant = x;
+    
+    x -= (int)x;//retira a parte inteira
+    
+    if(x>.5)//se a parte fracionaria for maior que 0.5, arredonda para cima
+        return ceil(ant);
+    
+    else//se nao arredondada para baixo
+        return floor(ant);	
 }
 
 unsigned char **dithering(unsigned char **data, int altura, int largura, int maxCor){
@@ -663,8 +663,8 @@ unsigned char **dithering(unsigned char **data, int altura, int largura, int max
 		for(j=0; j<largura; j++)
 			matriz [i][j] = data[i][j];
 
-	for(i=0; i<altura-1; i++){
-		for(j=0; j<largura-1; j++){
+	for(i=0; i<altura; i++){
+		for(j=0; j<largura; j++){
 			antigo = matriz[i][j];
 			
 			int aux = maxCor;
@@ -682,16 +682,19 @@ unsigned char **dithering(unsigned char **data, int altura, int largura, int max
 			double buf = (7.0/16.0) * erro;		
 			matriz[i][j+1] += normalizacao(buf);
 	
-			if (j!=0){
+			if (j!=0 && i < altura-1){
 				buf=(3.0/16.0) * erro;
 				matriz[i+1][j-1] += normalizacao(buf);
 			}
-			
-			buf=(5.0/16.0) * erro;
-			matriz[i+1][j] += normalizacao(buf);
-			
-			buf = ((1.0/16.0) * erro);
-			matriz[i+1][j+1] += normalizacao(buf);
+
+			if(i < altura-1){			
+    			buf=(5.0/16.0) * erro;
+    			matriz[i+1][j] += normalizacao(buf);
+            }
+            if(i < altura-1 && j < largura-1){			
+    			buf = ((1.0/16.0) * erro);
+    			matriz[i+1][j+1] += normalizacao(buf);
+            }
 		}
 	}
 	
