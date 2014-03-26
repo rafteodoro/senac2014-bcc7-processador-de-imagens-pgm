@@ -9,7 +9,7 @@
 #define QTD_BT 8//quantidade de botoes
 #define QTD_BT_FILEIRA 6//quantidade de botoes
 #define QTD_VERSOES 1//quantidade de versoes suportadas
-#define QTD_INTERVALO 244//quantidade maxima de intervalos
+#define QTD_INTERVALO 255//quantidade maxima de intervalos
 /*Estrutura do botao*/
 typedef struct {
 	int x, y; /*coordenadas*/
@@ -577,7 +577,7 @@ unsigned char **reducaoCores(unsigned char **data, int altura, int largura, int 
 	int intervalo[QTD_INTERVALO];
 	for(i=0; i < qtd; i++){
 		intervalo[i] = (maxCor/(qtd-1))*i;	
-            printf("qtd = %d, maxcor = %d intervalo %d\n", qtd, maxCor, intervalo[i]);		
+            //printf("qtd = %d, maxcor = %d intervalo %d\n", qtd, maxCor, intervalo[i]);		
 	}
 
 	for(j=0; j < altura; j++){
@@ -599,37 +599,79 @@ unsigned char **reducaoCores(unsigned char **data, int altura, int largura, int 
 }
 
 unsigned char **dithering(unsigned char **data, int altura, int largura, int maxCor){
-	int i,j;
-	unsigned char **r, **matriz, antigo;
+	int i, j, k, qtd=0, pixel;
+	unsigned char **matriz, antigo;
 	double erro;
 
-	matriz = alocaMatriz(altura, largura);
-	r = reducaoCores(data, altura, largura, maxCor);
-	
-	if(r==NULL){
+	const char *diretorio = "cor.txt";
+	FILE *arquivo;
+
+	if((arquivo = fopen(diretorio, "r+b"))==NULL) {
+		printf("Arquivo '%s' nao pode ser aberto\n",diretorio);
+		erroMsgBuf = "Arquivo cor.txt nao pode ser encontrado.";
 		desalocaMatriz(matriz, altura);
+		fclose(arquivo);
 		return NULL;
 	}
 
+	if(fscanf(arquivo, "%d", &qtd) != 1){
+		printf("Texto formatado errado\n");
+		erroMsgBuf = "Arquivo de configuracao invalido.";
+		desalocaMatriz(matriz, altura);
+		fclose(arquivo);
+		return NULL;
+	}
+	
+	if(qtd <2 || qtd > maxCor -1){
+        printf("a qtd cor nao esta entre 2 e %d, qtd lido:%d\n",maxCor, qtd);
+		erroMsgBuf = "Arquivo de configuracao invalido.";
+		desalocaMatriz(matriz, altura);
+		fclose(arquivo);
+        return NULL;       
+	}
+
+    fclose(arquivo);
+	int intervalo[QTD_INTERVALO];
+	for(i=0; i < qtd; i++){
+		intervalo[i] = (maxCor/(qtd-1))*i;	
+            //printf("qtd = %d, maxcor = %d intervalo %d\n", qtd, maxCor, intervalo[i]);		
+	}
+
+	matriz = alocaMatriz(altura, largura);
+	
+	for(i=0; i<altura; i++)
+		for(j=0; j<largura; j++)
+			matriz [i][j] = data[i][j];
+
 	for(i=0; i<altura-1; i++){
 		for(j=0; j<largura-1; j++){
-			antigo = data[i][j];
-			matriz[i][j] = r[i][j];
+			antigo = matriz[i][j];
+			
+			int aux = maxCor;
+			int flag = -1;
+			
+			for(k=0; k < qtd; k++){
+				if(abs(matriz[i][j]-intervalo[k]) < aux){
+					flag = k;
+					aux = abs(matriz[i][j]-intervalo[k]);
+				}
+			}
+			matriz[i][j] = intervalo[flag];
 			erro = antigo - matriz[i][j];
 
 			double buf = (7.0/16.0) * erro;		
-			matriz[i][j+1] = matriz[i][j+1] + buf;
+			matriz[i][j+1] += buf;
 	
 			if (j!=0){
 				buf=(3.0/16.0) * erro;
-				matriz[i+1][j-1] = matriz[i+1][j-1] + buf;
+				matriz[i+1][j-1] += buf;
 			}
 			
 			buf=(5.0/16.0) * erro;
-			matriz[i+1][j] = matriz[i+1][j] + buf;
+			matriz[i+1][j] += buf;
 			
 			buf = ((1.0/16.0) * erro);
-			matriz[i+1][j+1] = matriz[i+1][j+1] + buf;
+			matriz[i+1][j+1] += buf;
 		}
 	}
 	
