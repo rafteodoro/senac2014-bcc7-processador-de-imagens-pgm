@@ -710,7 +710,6 @@ unsigned char **histograma(unsigned char **data, int altura, int largura){
     int histo[256];
     double cdf[256], cdf_min=altura*largura, cdf_max=0;
 
- printf("cdf_min= %f      cdf_max= %f      ", cdf_min, cdf_max);
     for(i=0; i<altura; i++)
 		for(j=0; j<largura; j++)
 			matriz [i][j] = data[i][j];
@@ -735,7 +734,7 @@ unsigned char **histograma(unsigned char **data, int altura, int largura){
            cdf_min = cdf[i];
     }   
     
-    printf("cdf_min= %f      cdf_max= %f      ", cdf_min, cdf_max);
+    
     for (i=0; i<altura; i++){
         for (j=0; j<largura; j++){
             matriz[i][j]= normalizacao( ((cdf[matriz[i][j]] - cdf_min)/(cdf_max - cdf_min))*255);
