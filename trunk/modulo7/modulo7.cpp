@@ -8,9 +8,10 @@
 #include "allegro5/allegro_image.h"
 
 #define QTD_BT 10//quantidade de botoes
-#define QTD_BT_FILEIRA 6//quantidade de botoes
 #define QTD_VERSOES 1//quantidade de versoes suportadas
 #define QTD_INTERVALO 255//quantidade maxima de intervalos
+
+int QTD_BT_FILEIRA=6;//quantidade de botoes
 /*Estrutura do botao*/
 typedef struct {
 	int x, y; /*coordenadas*/
@@ -447,6 +448,22 @@ ALLEGRO_BITMAP *carregaBitmapBT(char * dir) {
 	return b;
 }
 
+/*
+int calculaFileira(int largura) {
+    
+    if (largura > 540)
+       QTD_BT_FILEIRA=largura/90;
+    if (QTD_BT_FILEIRA > QTD_BT)
+       QTD_BT_FILEIRA = QTD_BT;
+       
+    bL = btL * QTD_BT_FILEIRA;
+	bA = btA * (1+(QTD_BT/QTD_BT_FILEIRA));
+	
+       
+    return 0;
+}
+*/
+
 
 /*
 Cria os botoes do menu.
@@ -476,12 +493,14 @@ int criaMenu(Botao b[]) {
 		else
 			al_set_target_bitmap(b[i].img);/*nao tenho certeza o que isso faz =P */
 	}
-
+    
+   // calculaFileira(head->largura);
 	/*define posicoes dos botoes*/
 	defBotaoPos(b);
 
 	return 0;
 }
+
 
 /*desenha botoes do menu*/
 int desenhaMenu(ALLEGRO_DISPLAY *janela, Botao bt[]) {
@@ -755,13 +774,14 @@ unsigned char **histograma(unsigned char **data, int altura, int largura){
 
 unsigned char **filtromedia(ALLEGRO_DISPLAY *janela, unsigned char **data, int altura, int largura)
 {
-    int i, j, l, k, vizinhos=0, r;
+    int i, j, l, k, n=0, r;
     double media;
     unsigned char **matriz;
     matriz = alocaMatriz(altura, largura);
     const char *diretorio = "vizinhos.txt";
     FILE *arquivo;
     
+
    	if((arquivo = fopen(diretorio, "r+b"))==NULL) {
 		printf("Arquivo '%s' nao pode ser aberto\n",diretorio);
 		erroMsgBuf = "Arquivo vizinhos.txt nao pode ser encontrado.";
@@ -770,7 +790,7 @@ unsigned char **filtromedia(ALLEGRO_DISPLAY *janela, unsigned char **data, int a
 		return NULL;
 	}
 
-	if(fscanf(arquivo, "%d", &vizinhos) != 1){
+	if(fscanf(arquivo, "%d", &n) != 1){
 		printf("Texto formatado errado\n");
 		erroMsgBuf = "Arquivo de configuracao invalido.";
 		desalocaMatriz(matriz, altura);
@@ -779,34 +799,40 @@ unsigned char **filtromedia(ALLEGRO_DISPLAY *janela, unsigned char **data, int a
 	}
 	fclose(arquivo);
 
-	if(vizinhos < 3){
+    //Se o valor de n contido no arquivo vizinhos.txt for menor que 3 o programa envia um aviso e ajusta o valor para 3.
+	if(n < 3){
 		al_show_native_message_box(janela, "Valor Invalido", "Valor informado menor que o permitido.", "O valor foi ajustado para 3.", NULL, ALLEGRO_MESSAGEBOX_WARN);
-		vizinhos = 3;
+		n = 3;
 	}
-
-	if(vizinhos%2==0){
-		al_show_native_message_box(janela, "Valor Invalido", "Valor informado e par.", "O valor sera ajustado para o impar menor mais próximo.", NULL, ALLEGRO_MESSAGEBOX_WARN);
-		vizinhos --;
+    
+    //Se o valor de n contido no arquivo vizinhos.txt for um número par maior que 3 o programa envia um aviso e ajusta o valor para o ímpar menor mais próximo do valor encontrado.
+	if(n%2==0){
+		al_show_native_message_box(janela, "Valor Invalido", "Valor informado e par.", "O valor sera ajustado para o impar menor mais proximo.", NULL, ALLEGRO_MESSAGEBOX_WARN);
+		n--;
 	}
 	
+	//O valor de r é calculado para encontrar o centro da mascara 
+	r = (n-1)/2;
 	
-	r = (vizinhos-1)/2;
-	
+	// Laço que vai percorrer todos os pixels da imagem
 	for (i=0;i<altura;i++){
         for (j=0;j<largura;j++){
             media=0; 
             
+            //Laço que vai percorrer os vizinhos de cada pixel
             for (k=i-r;k<=i+r;k++){
                 for (l=j-r;l<=j+r;l++){
+                    //Se o vizinho for um pixel da imagem soma-se o seu nível de cinza, se for um pixel da borda não soma nada (zero)
                     if (k>=0 && k<altura && l>=0 && l<largura)
                        media+=data[k][l];         
                 }
             }
-            matriz[i][j] = arredondamento(media/pow((double)vizinhos,2));
-            //printf("\n\n\n MEDIA FINAL  Vizinhos [%d][%d]: %f = %d",i,j, media,matriz[i][j]);
-            //system ("pause");
+            //A nova matriz recebe o acumulado do nível de cinza dos vizinhos e divide pelo valor de n ao quadrado, que é o numero total de vizinhos (incluindo o pixel atual). Assim, calculando a média, que será arredondada.
+            matriz[i][j] = arredondamento(media/pow((double)n,2));
+
         }
     }
+    //Retorna a matriz completa para o método principal
     return matriz;
 }
 
@@ -978,11 +1004,11 @@ int main(int argc, char argv[]) {
 							botoes[7].ativo=true;
 							botoes[8].ativo=true;
 							botoes[9].ativo=true;
-
+                            
 							/*desenha a imagem na janela, 0 e bA sao as coordenadas x,y de onde vai comeca desenhar a imagem
 							sendo que bA representa a altura do menu*/
 							desenha(janela, head->data, head->altura, head->largura, (bL - head->largura)/2, bA);
-
+                            
 							/*redesenha menu*/
 							desenhaMenu(janela, botoes);
 
@@ -1027,6 +1053,7 @@ int main(int argc, char argv[]) {
 						botoes[1].ativo=true;
 						botoes[4].ativo=true;
 						botoes[5].ativo = false;
+                        
 						desenhaMenu(janela, botoes);
 						al_flip_display();
 					}
@@ -1046,6 +1073,7 @@ int main(int argc, char argv[]) {
 						botoes[1].ativo=true;
 						botoes[4].ativo=true;
 						botoes[5].ativo = false;
+						
 						desenhaMenu(janela, botoes);
 						al_flip_display();
 					}
