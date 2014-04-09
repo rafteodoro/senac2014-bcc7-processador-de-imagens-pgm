@@ -745,6 +745,60 @@ unsigned char **histograma(unsigned char **data, int altura, int largura){
     return matriz;
 }
 
+unsigned char **filtromedia(unsigned char **data, int altura, int largura)
+{
+    int i, j, l, k, vizinhos=0, r;
+    double media;
+    unsigned char **matriz;
+    matriz = alocaMatriz(altura, largura);
+    const char *diretorio = "vizinhos.txt";
+    FILE *arquivo;
+    
+   	if((arquivo = fopen(diretorio, "r+b"))==NULL) {
+		printf("Arquivo '%s' nao pode ser aberto\n",diretorio);
+		erroMsgBuf = "Arquivo vizinhos.txt nao pode ser encontrado.";
+		desalocaMatriz(matriz, altura);
+		fclose(arquivo);
+		return NULL;
+	}
+
+	if(fscanf(arquivo, "%d", &vizinhos) != 1){
+		printf("Texto formatado errado\n");
+		erroMsgBuf = "Arquivo de configuracao invalido.";
+		desalocaMatriz(matriz, altura);
+		fclose(arquivo);
+		return NULL;
+	}
+
+	if(vizinhos < 3 || vizinhos%2==0){
+        printf("O tamanho de n deve ser um numero impar a partir de 3");
+		erroMsgBuf = "Arquivo de configuracao invalido.";
+		desalocaMatriz(matriz, altura);
+		fclose(arquivo);
+        return NULL;
+	}
+	fclose(arquivo);
+	
+	r = (vizinhos-1)/2;
+	
+	for (i=0;i<altura;i++){
+        for (j=0;j<largura;j++){
+            media=0; 
+            
+            for (k=i-r;k<=i+r;k++){
+                for (l=j-r;l<=j+r;l++){
+                    if (k>=0 && k<altura && l>=0 && l<largura)
+                       media+=data[k][l];         
+                }
+            }
+            matriz[i][j] = normalizacao(media/pow(vizinhos,2));
+            //printf("\n\n\n MEDIA FINAL  Vizinhos [%d][%d]: %f = %d",i,j, media,matriz[i][j]);
+            //system ("pause");
+        }
+    }
+    return matriz;
+}
+
 /*metodo principal, gerencia a janela*/
 int main(int argc, char argv[]) {
 
@@ -1108,7 +1162,16 @@ int main(int argc, char argv[]) {
 				case 9:
 					if(botoes[9].ativo==true){
 						InserirNodo(head->data, head->largura, head->altura);
-                        head->data = histograma(head->prox->data, head->prox->altura, head->prox->largura);
+                        head->data = filtromedia(head->prox->data, head->prox->altura, head->prox->largura);
+                        if(head->data==NULL){
+							al_show_native_message_box(janela, "Erro", "Erro ao carregar arquivo de qtde de vizinhos", erroMsgBuf, NULL, ALLEGRO_MESSAGEBOX_ERROR);
+							head = head->prox;
+							free(head->ante);
+							head->ante=NULL;
+							desenhaMenu(janela, botoes);
+					     	al_flip_display();
+                            break;
+						}
 						undo++;
                         redo=0;
 						botoes[1].ativo=true;
