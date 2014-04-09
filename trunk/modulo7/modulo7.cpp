@@ -356,11 +356,11 @@ int gravaDados(FILE *out, unsigned char **data, int altura, int largura, int max
 	int i, j;
 	for(i=0; i<altura; i++) {
 		for(j=0; j<largura; j++){
-			//if(data[i][j] <0 || data[i][j]>maxCor) {
+			if(data[i][j] <0 || data[i][j]>maxCor) {
 				printf("Erro! dados inconsistentes\n");
 				erroMsgBuf = "Erro de dados na gravacao da imagem.";
-			//	return -1;
-			//}
+				return -1;
+			}
 			putc(data[i][j], out);
 		}
 	}
@@ -753,7 +753,7 @@ unsigned char **histograma(unsigned char **data, int altura, int largura){
     return matriz;
 }
 
-unsigned char **filtromedia(unsigned char **data, int altura, int largura)
+unsigned char **filtromedia(ALLEGRO_DISPLAY *janela, unsigned char **data, int altura, int largura)
 {
     int i, j, l, k, vizinhos=0, r;
     double media;
@@ -777,15 +777,18 @@ unsigned char **filtromedia(unsigned char **data, int altura, int largura)
 		fclose(arquivo);
 		return NULL;
 	}
-
-	if(vizinhos < 3 || vizinhos%2==0){
-        printf("O tamanho de n deve ser um numero impar a partir de 3");
-		erroMsgBuf = "Arquivo de configuracao invalido.";
-		desalocaMatriz(matriz, altura);
-		fclose(arquivo);
-        return NULL;
-	}
 	fclose(arquivo);
+
+	if(vizinhos < 3){
+		al_show_native_message_box(janela, "Valor Invalido", "Valor informado menor que o permitido.", "O valor foi ajustado para 3.", NULL, ALLEGRO_MESSAGEBOX_WARN);
+		vizinhos = 3;
+	}
+
+	if(vizinhos%2==0){
+		al_show_native_message_box(janela, "Valor Invalido", "Valor informado e par.", "O valor sera ajustado para o impar menor mais próximo.", NULL, ALLEGRO_MESSAGEBOX_WARN);
+		vizinhos --;
+	}
+	
 	
 	r = (vizinhos-1)/2;
 	
@@ -799,7 +802,7 @@ unsigned char **filtromedia(unsigned char **data, int altura, int largura)
                        media+=data[k][l];         
                 }
             }
-            matriz[i][j] = arredondamento(media/pow(vizinhos,2));
+            matriz[i][j] = arredondamento(media/pow((double)vizinhos,2));
             //printf("\n\n\n MEDIA FINAL  Vizinhos [%d][%d]: %f = %d",i,j, media,matriz[i][j]);
             //system ("pause");
         }
@@ -1170,7 +1173,7 @@ int main(int argc, char argv[]) {
 				case 9:
 					if(botoes[9].ativo==true){
 						InserirNodo(head->data, head->largura, head->altura);
-                        head->data = filtromedia(head->prox->data, head->prox->altura, head->prox->largura);
+                        head->data = filtromedia(janela, head->prox->data, head->prox->altura, head->prox->largura);
                         if(head->data==NULL){
 							al_show_native_message_box(janela, "Erro", "Erro ao carregar arquivo de qtde de vizinhos", erroMsgBuf, NULL, ALLEGRO_MESSAGEBOX_ERROR);
 							head = head->prox;
