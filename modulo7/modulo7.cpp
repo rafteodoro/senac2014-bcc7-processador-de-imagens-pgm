@@ -448,11 +448,13 @@ ALLEGRO_BITMAP *carregaBitmapBT(char * dir) {
 	return b;
 }
 
-/*
+
 int calculaFileira(int largura) {
     
     if (largura > 540)
        QTD_BT_FILEIRA=largura/90;
+    else
+        QTD_BT_FILEIRA=6;
     if (QTD_BT_FILEIRA > QTD_BT)
        QTD_BT_FILEIRA = QTD_BT;
        
@@ -462,7 +464,7 @@ int calculaFileira(int largura) {
        
     return 0;
 }
-*/
+
 
 
 /*
@@ -775,7 +777,7 @@ unsigned char **histograma(unsigned char **data, int altura, int largura){
 unsigned char **filtromedia(ALLEGRO_DISPLAY *janela, unsigned char **data, int altura, int largura)
 {
     int i, j, l, k, n=0, r;
-    double media;
+    double soma;
     unsigned char **matriz;
     matriz = alocaMatriz(altura, largura);
     const char *diretorio = "vizinhos.txt";
@@ -817,18 +819,18 @@ unsigned char **filtromedia(ALLEGRO_DISPLAY *janela, unsigned char **data, int a
 	// Laço que vai percorrer todos os pixels da imagem
 	for (i=0;i<altura;i++){
         for (j=0;j<largura;j++){
-            media=0; 
+            soma=0; 
             
             //Laço que vai percorrer os vizinhos de cada pixel
             for (k=i-r;k<=i+r;k++){
                 for (l=j-r;l<=j+r;l++){
                     //Se o vizinho for um pixel da imagem soma-se o seu nível de cinza, se for um pixel da borda não soma nada (zero)
                     if (k>=0 && k<altura && l>=0 && l<largura)
-                       media+=data[k][l];         
+                       soma+=data[k][l];         
                 }
             }
             //A nova matriz recebe o acumulado do nível de cinza dos vizinhos e divide pelo valor de n ao quadrado, que é o numero total de vizinhos (incluindo o pixel atual). Assim, calculando a média, que será arredondada.
-            matriz[i][j] = arredondamento(media/pow((double)n,2));
+            matriz[i][j] = arredondamento(soma/pow((double)n,2));
 
         }
     }
@@ -986,6 +988,8 @@ int main(int argc, char argv[]) {
 								al_clear_to_color(al_map_rgb(corFundo, corFundo, corFundo));
 
 								/*redesenha menu*/
+								calculaFileira(head->largura);
+							    defBotaoPos(botoes);
 								desenhaMenu(janela, botoes);
 
 								/*atualiza tela*/
@@ -1005,11 +1009,15 @@ int main(int argc, char argv[]) {
 							botoes[8].ativo=true;
 							botoes[9].ativo=true;
                             
+                            
+                            calculaFileira(head->largura);
+							defBotaoPos(botoes);
 							/*desenha a imagem na janela, 0 e bA sao as coordenadas x,y de onde vai comeca desenhar a imagem
 							sendo que bA representa a altura do menu*/
 							desenha(janela, head->data, head->altura, head->largura, (bL - head->largura)/2, bA);
                             
 							/*redesenha menu*/
+						
 							desenhaMenu(janela, botoes);
 
 							/*atualiza tela*/
