@@ -467,7 +467,7 @@ int criaMenu(Botao b[]) {
 	b[6].img = carregaBitmapBT("alteraCor.png");
 	b[7].img = carregaBitmapBT("dithering.png");
 	b[8].img = carregaBitmapBT("histograma.png");
-	b[9].img = carregaBitmapBT("botao.png");
+	b[9].img = carregaBitmapBT("filtromedia.png");
 
 	for(i=0; i<QTD_BT;i++) {
 		if(b[i].img==NULL)/*verifica se todos os botoes foram carregados com sucesso*/
@@ -613,11 +613,22 @@ int normalizacao(double x){
     x -= (int)x;//retira a parte inteira
 
     if(x>.5)//se a parte fracionaria for maior que 0.5, arredonda para cima
-        return ceil(ant);
+        return (int)ceil(ant);
 
     else//se nao arredondada para baixo
-        return floor(ant);
+        return (int)floor(ant);
 }
+
+int arredondamento (double x){
+    double ant=x;
+    x -= (int)x; //Retira a parte inteira do valor de x
+    
+    //Se x for maior que 0.5 a função retornará o menor valor inteiro depois de ant
+    if (x > .5)
+       return (int)ceil(ant); 
+    else
+       return (int)floor(ant); //Se x for igual ou menor que 0.5 a função retornará o maior valor inteiro antes de ant;
+} 
 
 unsigned char **dithering(unsigned char **data, int altura, int largura, int maxCor){
 	int i, j, k, qtd=0, pixel;
@@ -708,8 +719,8 @@ unsigned char **histograma(unsigned char **data, int altura, int largura){
     unsigned char **matriz;
 
     matriz=alocaMatriz(altura,largura);
-    int histo[256];
-    double cdf[256], cdf_min=altura*largura, cdf_max=0;
+    int histo[256], cdf[256];
+    double cdf_min=altura*largura;
 
     for(i=0; i<altura; i++)
 		for(j=0; j<largura; j++)
@@ -728,17 +739,14 @@ unsigned char **histograma(unsigned char **data, int altura, int largura){
         else
            cdf[i] = cdf[i-1] + histo[i];
         
-        if (cdf[i] > cdf_max)
-           cdf_max = cdf[i];
-        
         if ((cdf[i] > 0) && (cdf[i] < cdf_min))
            cdf_min = cdf[i];
     }   
     
-    
     for (i=0; i<altura; i++){
         for (j=0; j<largura; j++){
-            matriz[i][j]= normalizacao( ((cdf[matriz[i][j]] - cdf_min)/(cdf_max - cdf_min))*255);
+            double buf = ((double)(cdf[matriz[i][j]] - cdf_min)/(double)((altura*largura) - cdf_min))*255;
+            matriz[i][j]= arredondamento(buf);
         }
     }
         
@@ -791,7 +799,7 @@ unsigned char **filtromedia(unsigned char **data, int altura, int largura)
                        media+=data[k][l];         
                 }
             }
-            matriz[i][j] = normalizacao(media/pow(vizinhos,2));
+            matriz[i][j] = arredondamento(media/pow(vizinhos,2));
             //printf("\n\n\n MEDIA FINAL  Vizinhos [%d][%d]: %f = %d",i,j, media,matriz[i][j]);
             //system ("pause");
         }
