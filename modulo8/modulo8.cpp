@@ -839,6 +839,96 @@ unsigned char **filtromedia(ALLEGRO_DISPLAY *janela, unsigned char **data, int a
     return matriz;
 }
 
+void insertionsort (unsigned char *vetor, int totalviz)
+{
+    int i,j,aux;
+    
+    for (i=1;i<totalviz;i++){
+        aux = vetor[i];
+        j = i-1;
+        while ((j>=0) && (aux < vetor[j])){
+              vetor[j+1]= vetor[j];
+              j--;
+        }
+        vetor[j+1]=aux;
+    }
+}
+
+unsigned char **filtromediana(ALLEGRO_DISPLAY *janela, unsigned char **data, int altura, int largura)
+{
+    int i,j,k,l,m,n=0,r,totalviz,vetmeio;
+    unsigned char **matriz, *mediana;
+    matriz = alocaMatriz(altura, largura);
+    const char *diretorio = "vizinhos.txt";
+    FILE *arquivo;
+    
+
+   	if((arquivo = fopen(diretorio, "r+b"))==NULL) {
+		printf("Arquivo '%s' nao pode ser aberto\n",diretorio);
+		erroMsgBuf = "Arquivo vizinhos.txt nao pode ser encontrado.";
+		desalocaMatriz(matriz, altura);
+		fclose(arquivo);
+		return NULL;
+	}
+
+	if(fscanf(arquivo, "%d", &n) != 1){
+		printf("Texto formatado errado\n");
+		erroMsgBuf = "Arquivo de configuracao invalido.";
+		desalocaMatriz(matriz, altura);
+		fclose(arquivo);
+		return NULL;
+	}
+	fclose(arquivo);
+
+    //Se o valor de n contido no arquivo vizinhos.txt for menor que 3 o programa envia um aviso e ajusta o valor para 3.
+	if(n < 3){
+		al_show_native_message_box(janela, "Valor Invalido", "Valor informado menor que o permitido.", "O valor foi ajustado para 3.", NULL, ALLEGRO_MESSAGEBOX_WARN);
+		n = 3;
+	}
+    
+    //Se o valor de n contido no arquivo vizinhos.txt for um número par maior que 3 o programa envia um aviso e ajusta o valor para o ímpar menor mais próximo do valor encontrado.
+	if(n%2==0){
+		al_show_native_message_box(janela, "Valor Invalido", "Valor informado e par.", "O valor sera ajustado para o impar menor mais proximo.", NULL, ALLEGRO_MESSAGEBOX_WARN);
+		n--;
+	}
+	//Calculamos o total de vizinhos que cada pixel terá, com ele incluso
+	totalviz = n*n;
+	//Calculamos a posição da mediana
+	vetmeio=(totalviz-1)/2;
+	//Aloca memória para o vetor de pixels
+	mediana = (unsigned char *)malloc(totalviz*sizeof(unsigned char));
+	
+	//O valor de r é calculado para encontrar o centro da mascara 
+	r = (n-1)/2;
+	// Laço que vai percorrer todos os pixels da imagem
+	for (i=0;i<altura;i++){
+        for (j=0;j<largura;j++){
+             m=0;
+            
+            //Laço que vai percorrer os vizinhos de cada pixel
+            for (k=i-r;k<=i+r;k++){
+                for (l=j-r;l<=j+r;l++){
+                    //Se o vizinho for um pixel da imagem guardamos o seu nível de cinza no vetor
+                    if (k>=0 && k<altura && l>=0 && l<largura)
+                       mediana[m]=data[k][l];
+                    else // Se o vizinho estiver fora da imagem, associamos este vizinho como 0 e guardamos no vetor
+                       mediana[m]=0;
+                    m++;
+                                
+                }
+            }
+            //Realizamos a ordenação do vetor pelo método Insertion Sort
+            insertionsort(mediana, totalviz);
+            //Cada pixel na nova matriz recebe a mediana do nível de cinza dos seus vizinhos 
+            matriz[i][j] = mediana[vetmeio];
+
+        }
+    }
+    free(mediana);
+    //Retorna a matriz completa para o método principal
+    return matriz;
+}
+
 /*metodo principal, gerencia a janela*/
 int main(int argc, char argv[]) {
 
@@ -984,6 +1074,7 @@ int main(int argc, char argv[]) {
 								botoes[7].ativo=false;
 								botoes[8].ativo=false;
 								botoes[9].ativo=false;
+								botoes[10].ativo=false;
 
 								/*limpa a tela*/
 								al_clear_to_color(al_map_rgb(corFundo, corFundo, corFundo));
@@ -1009,6 +1100,7 @@ int main(int argc, char argv[]) {
 							botoes[7].ativo=true;
 							botoes[8].ativo=true;
 							botoes[9].ativo=true;
+							botoes[10].ativo=true;
                             
                             
                             calculaFileira(head->largura);
@@ -1237,7 +1329,7 @@ int main(int argc, char argv[]) {
 				case 10:
 					if(botoes[10].ativo==true){
 						InserirNodo(head->data, head->largura, head->altura);
-                        head->data = filtromedia(janela, head->prox->data, head->prox->altura, head->prox->largura);
+                        head->data = filtromediana(janela, head->prox->data, head->prox->altura, head->prox->largura);
                         if(head->data==NULL){
 							al_show_native_message_box(janela, "Erro", "Erro ao carregar arquivo de qtde de vizinhos", erroMsgBuf, NULL, ALLEGRO_MESSAGEBOX_ERROR);
 							head = head->prox;
