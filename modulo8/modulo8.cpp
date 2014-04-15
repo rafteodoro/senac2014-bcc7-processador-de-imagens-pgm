@@ -839,11 +839,11 @@ unsigned char **filtromedia(ALLEGRO_DISPLAY *janela, unsigned char **data, int a
     return matriz;
 }
 
-void insertionsort (unsigned char *vetor, int totalviz)
+void insertionsort (unsigned char *vetor, int inicio, int totalviz)
 {
     int i,j,aux;
     
-    for (i=1;i<totalviz;i++){
+    for (i=inicio + 1; i<totalviz; i++){
         aux = vetor[i];
         j = i-1;
         while ((j>=0) && (aux < vetor[j])){
@@ -852,11 +852,65 @@ void insertionsort (unsigned char *vetor, int totalviz)
         }
         vetor[j+1]=aux;
     }
+   // printf("oi");
+}
+
+int dividir (unsigned char *vetor, int inicio, int totalviz){
+    int esq = inicio+1;
+    int dir = totalviz;
+    int aux;
+    unsigned char pivo = vetor[inicio];
+    while (esq <= dir)
+    {
+          if (vetor[esq] <= pivo){
+        //     printf("\n Esquerda: %d",esq);
+             esq++;
+             continue;
+          }
+          if (vetor[dir] > pivo){
+        //     printf("\n Direita: %d",dir);
+             dir--;
+             continue;
+          }
+          aux = vetor[esq];
+          vetor[esq] = vetor[dir];
+          //printf("\nVetor[esq][%d] - %d",esq,vetor[esq]);
+          vetor[dir] = aux;
+         // printf("\nVetor[dir][%d] - %d",dir,vetor[dir]);
+          esq++;
+          dir--;
+        //  system("pause");
+    }
+    vetor[inicio] = vetor[dir];
+    vetor[dir]=pivo;
+   // printf("\n Divide: %d - Vetor[inicio]: %d   ",dir,vetor[inicio]);
+    int indice;
+    //printf("\n");
+    //for(indice=inicio;indice<=totalviz;indice++)
+    //    printf(" [%d]",vetor[indice]);
+   // system("pause");
+    return dir;
+}
+          
+          
+
+void sort (unsigned char *vetor, int inicio, int totalviz){
+     int divide;
+     if (inicio < totalviz)
+     {
+          if ((totalviz - inicio) <= 9)
+             insertionsort(vetor, inicio, totalviz+1);//+1 no totalviz?
+          else{
+               divide = dividir(vetor, inicio, totalviz);
+               sort(vetor, inicio, divide - 1);
+               sort(vetor, divide+1, totalviz);
+          }
+     }
 }
 
 unsigned char **filtromediana(ALLEGRO_DISPLAY *janela, unsigned char **data, int altura, int largura)
 {
-    int i,j,k,l,m,n=0,r,totalviz,vetmeio;
+    int i,j,k,l,m,n=0,r,totalviz,vetmeio,inicio=0;
     unsigned char **matriz, *mediana;
     matriz = alocaMatriz(altura, largura);
     const char *diretorio = "vizinhos.txt";
@@ -917,8 +971,13 @@ unsigned char **filtromediana(ALLEGRO_DISPLAY *janela, unsigned char **data, int
                                 
                 }
             }
+            
             //Realizamos a ordenação do vetor pelo método Insertion Sort
-            insertionsort(mediana, totalviz);
+ 
+            sort(mediana, inicio, totalviz-1);
+           // for (k=0;k<m;k++)
+            //  printf("\nVetor[%d][%d] = %d  ",i,j,mediana[vetmeio]); 
+           // system("pause");
             //Cada pixel na nova matriz recebe a mediana do nível de cinza dos seus vizinhos 
             matriz[i][j] = mediana[vetmeio];
 
