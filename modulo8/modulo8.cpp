@@ -842,8 +842,8 @@ unsigned char **filtromedia(ALLEGRO_DISPLAY *janela, unsigned char **data, int a
 void insertionsort (unsigned char *vetor, int inicio, int totalviz)
 {
     int i,j,aux;
-    
-    for (i=inicio + 1; i<totalviz; i++){
+
+    for (i=inicio + 1; i<=totalviz; i++){
         aux = vetor[i];
         j = i-1;
         while ((j>=0) && (aux < vetor[j])){
@@ -852,7 +852,6 @@ void insertionsort (unsigned char *vetor, int inicio, int totalviz)
         }
         vetor[j+1]=aux;
     }
-   // printf("oi");
 }
 
 int dividir (unsigned char *vetor, int inicio, int totalviz){
@@ -899,7 +898,7 @@ void sort (unsigned char *vetor, int inicio, int totalviz){
      if (inicio < totalviz)
      {
           if ((totalviz - inicio) <= 9)
-             insertionsort(vetor, inicio, totalviz+1);//+1 no totalviz?
+             insertionsort(vetor, inicio, totalviz);//+1 no totalviz?
           else{
                divide = dividir(vetor, inicio, totalviz);
                sort(vetor, inicio, divide - 1);
