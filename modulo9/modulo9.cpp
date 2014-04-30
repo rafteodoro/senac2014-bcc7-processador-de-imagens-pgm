@@ -985,35 +985,34 @@ unsigned char **filtromediana(ALLEGRO_DISPLAY *janela, unsigned char **data, int
     return matriz;
 }
 
-double *calculagaussi(int r, float sig, int totalviz){
-    double *mascara;
-    int i,j,k=0;  
-    double m1,m2,m3,m4,m5,m6,m7; 
-    mascara =(double *)malloc(totalviz*sizeof(double));
+double **calculagaussi(int r, float sig, int n){
+    double **mascara, soma=0;
+    int i,j,k=0;
+      
+   	mascara =(double **)malloc(n*sizeof(double*));
+	for (i=0; i<n;i++)
+        mascara[i] = (double *) malloc (n*sizeof(double)); 
+        
     for (i=-r;i<=r;i++){
         for(j=-r;j<=r;j++){
-            m1 = 2*M_PI*sig*sig;
-            m2 = 1/m1;
-            m3 = (i*i)+(j*j);
-            m4 = 2*sig*sig;
-            m5 = -(m3/m4);
-            m6 = pow(M_E,m5);
-            m7 = m2*m6;               
-            //mascara[k]=(1/(2*M_PI*sig*sig))*pow(M_E,-((i*i)+(j*j))/(2*sig*sig));
-            mascara[k] = m7;
+            mascara[i+r][j+r]=(1/(2*M_PI*sig*sig))*exp(-((i*i)+(j*j))/(2*sig*sig));
+            soma += mascara[i+r][j+r];
             printf("r - %d",r);
-            printf("\n PIXEL [%d][%d] = [%d] %f ",i,j,k,mascara[k]);
+            printf("\n PIXEL [%d][%d] = %f ",i,j,mascara[i+r][j+r]);
             system("pause");
-            k++;
         }
     }
+    for (i=0;i<n;i++)
+        for(j=0;j<n;j++)
+            mascara[i][j] /= soma;
+    
     return mascara;
 }
 unsigned char **operagaussi(ALLEGRO_DISPLAY *janela, unsigned char **data, int altura, int largura)
 {
     int i,j,n=0,r,k,l,m,totalviz;
     float sig;
-    double soma, *mascara;
+    double soma, **mascara;
     unsigned char **matriz;
     matriz = alocaMatriz(altura, largura);
     const char *diretorio = "vizinhos.txt";
@@ -1070,28 +1069,37 @@ unsigned char **operagaussi(ALLEGRO_DISPLAY *janela, unsigned char **data, int a
 	//O valor de r Ð¹ calculado para encontrar o centro da mascara 
 	r = (n-1)/2;
 	
-	mascara =(double *)malloc(totalviz*sizeof(double));
-	printf("\n E - %f   Pi - %f",M_E,M_PI);
-	system("pause");
-	mascara = calculagaussi(r,sig,totalviz);
+	mascara =(double **)malloc(n*sizeof(double*));
+	for (i=0; i<n;i++)
+        mascara[i] = (double *) malloc (n*sizeof(double)); 
+
+	mascara = calculagaussi(r,sig,n);
     
-    for (i=0;i<totalviz;i++)
-        printf("\n Mascara [%d] - %f",i,mascara[i]);
+    for (i=0;i<n;i++){
+        for (j=0;j<n;j++){
+            printf("\n Mascara [%d][%d] - %f",i,j,mascara[i][j]);
+        }
+    }
     system("pause");
-    
+    int o;
     for (i=0; i<altura;i++){
         for (j=0;j<largura;j++){
             soma=0;
             m=0;
-
+            o=0;
             //Laço que vai percorrer os vizinhos de cada pixel
             for (k=i-r;k<=i+r;k++){
                 for (l=j-r;l<=j+r;l++){
                     //Se o vizinho for um pixel da imagem soma-se o seu nivel de cinza, se for um pixel da borda nao soma nada(zero)
                     if (k>=0 && k<altura && l>=0 && l<largura)
-                       soma+=(data[k][l]*mascara[m]);  
-                    m++;
+                       soma+=(data[k][l]*mascara[m][o]);  
+                    
+                   // printf("\n\n Mascara - %f \n Data - %d",mascara[m][o],data[k][l]);   
+                    printf("\n Matriz[%d][%d] - [%d][%d] - %f",i,j,k,l,soma);
+                    system("pause");
+                    o++;
                 }
+                m++;
             }
             printf("\n Matriz[%d][%d] - %f",i,j,soma);
             system("pause");
