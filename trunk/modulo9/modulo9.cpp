@@ -986,31 +986,33 @@ unsigned char **filtromediana(ALLEGRO_DISPLAY *janela, unsigned char **data, int
 }
 
 double **calculagaussi(int r, float sig, int n){
-    double **mascara, soma=0;
+    double **mascara, soma=0.0;
     int i,j,k=0;
-      
+    
+    //Alocacao da matriz mascara 
    	mascara =(double **)malloc(n*sizeof(double*));
 	for (i=0; i<n;i++)
         mascara[i] = (double *) malloc (n*sizeof(double)); 
         
+        
+    //Aplicacao do calculo do filtro gaussiano para cada pixel da mascara
     for (i=-r;i<=r;i++){
-        for(j=-r;j<=r;j++){
+        for(j=-r;j<=r;j++){           
             mascara[i+r][j+r]=(1/(2*M_PI*sig*sig))*exp(-((i*i)+(j*j))/(2*sig*sig));
             soma += mascara[i+r][j+r];
-            printf("r - %d",r);
-            printf("\n PIXEL [%d][%d] = %f ",i,j,mascara[i+r][j+r]);
-            system("pause");
         }
     }
+    
+    //Cada pixel da mascara é dividido pela soma total de todos para calcular o peso do mesmo.
     for (i=0;i<n;i++)
         for(j=0;j<n;j++)
             mascara[i][j] /= soma;
-    
+
     return mascara;
 }
 unsigned char **operagaussi(ALLEGRO_DISPLAY *janela, unsigned char **data, int altura, int largura)
 {
-    int i,j,n=0,r,k,l,m,totalviz;
+    int i,j,n=0,r,k,l,m,o;
     float sig;
     double soma, **mascara;
     unsigned char **matriz;
@@ -1038,13 +1040,13 @@ unsigned char **operagaussi(ALLEGRO_DISPLAY *janela, unsigned char **data, int a
 
     //Se o valor de n contido no arquivo vizinhos.txt for menor que 3 o programa envia um aviso e ajusta o valor para 3.
 	if(n < 3){
-		al_show_native_message_box(janela, "Valor Invalido", "Valor informado menor que o permitido.", "O valor foi ajustado para 3.", NULL, ALLEGRO_MESSAGEBOX_WARN);
+		al_show_native_message_box(janela, "Valor de Vizinhos Invalido", "Valor informado menor que o permitido.", "O valor foi ajustado para 3.", NULL, ALLEGRO_MESSAGEBOX_WARN);
 		n = 3;
 	}
     
-    //Se o valor de n contido no arquivo vizinhos.txt for um nÑŠmero par maior que 3 o programa envia um aviso e ajusta o valor para o Ð½mpar menor mais prÑƒximo do valor encontrado.
+    //Se o valor de n contido no arquivo vizinhos.txt for um numero par maior que 3 o programa envia um aviso e ajusta o valor para o impar menor mais proximo do valor encontrado.
 	if(n%2==0){
-		al_show_native_message_box(janela, "Valor Invalido", "Valor informado e par.", "O valor sera ajustado para o impar menor mais proximo.", NULL, ALLEGRO_MESSAGEBOX_WARN);
+		al_show_native_message_box(janela, "Valor de Vizinhos Invalido", "Valor informado e par.", "O valor sera ajustado para o impar menor mais proximo.", NULL, ALLEGRO_MESSAGEBOX_WARN);
 		n--;
 	}
 
@@ -1056,7 +1058,7 @@ unsigned char **operagaussi(ALLEGRO_DISPLAY *janela, unsigned char **data, int a
 		return NULL;
 	}
 
-	if(fscanf(arquivo, "%f", &sig) != 1){
+	if(fscanf(arquivo, "%f", &sig) != 1) {
 		printf("Texto formatado errado\n");
 		erroMsgBuf = "Arquivo de configuracao invalido.";
 		desalocaMatriz(matriz, altura);
@@ -1064,46 +1066,44 @@ unsigned char **operagaussi(ALLEGRO_DISPLAY *janela, unsigned char **data, int a
 		return NULL;
 	}
 	fclose(arquivo);
-	//Calculamos o total de vizinhos que cada pixel terÐ±, com ele incluso
-	totalviz = n*n;
-	//O valor de r Ð¹ calculado para encontrar o centro da mascara 
+	
+	//Se o valor de sig contido no arquivo sigma.txt for um numero menor ou igual a 0, o valor é reajustado para 1.
+	if(sig <= 0){
+		al_show_native_message_box(janela, "Valor de sigma Invalido", "Valor informado deve ser positivo.", "O valor foi ajustado para 1.", NULL, ALLEGRO_MESSAGEBOX_WARN);
+		sig = 1;
+	}
+	
+	//O valor de r e calculado para encontrar o centro da mascara 
 	r = (n-1)/2;
 	
+	//Realizamos a alocação da matriz da mascara na memoria
 	mascara =(double **)malloc(n*sizeof(double*));
 	for (i=0; i<n;i++)
         mascara[i] = (double *) malloc (n*sizeof(double)); 
 
+    //E chamada a funcao que faz o calculo dos pesos da mascara
 	mascara = calculagaussi(r,sig,n);
-    
-    for (i=0;i<n;i++){
-        for (j=0;j<n;j++){
-            printf("\n Mascara [%d][%d] - %f",i,j,mascara[i][j]);
-        }
-    }
-    system("pause");
-    int o;
+
+    //Laco que percorre a imagem pixel a pixel
     for (i=0; i<altura;i++){
         for (j=0;j<largura;j++){
             soma=0;
-            m=0;
-            o=0;
+            m= -r;
+            
             //Laço que vai percorrer os vizinhos de cada pixel
             for (k=i-r;k<=i+r;k++){
+                o= -r;
+                
                 for (l=j-r;l<=j+r;l++){
-                    //Se o vizinho for um pixel da imagem soma-se o seu nivel de cinza, se for um pixel da borda nao soma nada(zero)
+                    //Se o vizinho for um pixel da imagem multiplica-se o seu nivel de cinza com o peso da mascara naquela posicao, se for um pixel da borda nao soma nada(zero)
                     if (k>=0 && k<altura && l>=0 && l<largura)
-                       soma+=(data[k][l]*mascara[m][o]);  
-                    
-                   // printf("\n\n Mascara - %f \n Data - %d",mascara[m][o],data[k][l]);   
-                    printf("\n Matriz[%d][%d] - [%d][%d] - %f",i,j,k,l,soma);
-                    system("pause");
+                       soma+=(data[k][l]*mascara[m+r][o+r]);  
                     o++;
                 }
                 m++;
             }
-            printf("\n Matriz[%d][%d] - %f",i,j,soma);
-            system("pause");
-            matriz[i][j] = arredondamento(soma);
+            //Quando todos o pesos foram somados, arredonda-se o valor para o inteiro mais proximo e guarda na nova matriz
+            matriz[i][j] = (unsigned char)round(soma);
         }       
     }
 
