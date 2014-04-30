@@ -1004,10 +1004,11 @@ double **calculagaussi(int r, float sig, int n){
     }
     
     //Cada pixel da mascara é dividido pela soma total de todos para calcular o peso do mesmo.
-    for (i=0;i<n;i++)
-        for(j=0;j<n;j++)
+    for (i=0;i<n;i++){
+        for(j=0;j<n;j++){
             mascara[i][j] /= soma;
-
+        }
+    }
     return mascara;
 }
 unsigned char **operagaussi(ALLEGRO_DISPLAY *janela, unsigned char **data, int altura, int largura)
