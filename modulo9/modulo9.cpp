@@ -986,7 +986,7 @@ unsigned char **filtromediana(ALLEGRO_DISPLAY *janela, unsigned char **data, int
 }
 
 double **calculagaussi(int r, float sig, int n){
-    double **mascara, soma=0.0;
+    double **mascara;
     int i,j,k=0;
     
     //Alocacao da matriz mascara 
@@ -999,14 +999,6 @@ double **calculagaussi(int r, float sig, int n){
     for (i=-r;i<=r;i++){
         for(j=-r;j<=r;j++){           
             mascara[i+r][j+r]=(1/(2*M_PI*sig*sig))*exp(-((i*i)+(j*j))/(2*sig*sig));
-            soma += mascara[i+r][j+r];
-        }
-    }
-    
-    //Cada pixel da mascara é dividido pela soma total de todos para calcular o peso do mesmo.
-    for (i=0;i<n;i++){
-        for(j=0;j<n;j++){
-            mascara[i][j] /= soma;
         }
     }
     return mascara;
