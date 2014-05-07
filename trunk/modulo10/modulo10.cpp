@@ -490,7 +490,7 @@ int criaMenu(Botao b[]) {
 	b[9].img = carregaBitmapBT("filtromedia.png");
 	b[10].img = carregaBitmapBT("filtromediana.png");
 	b[11].img = carregaBitmapBT("operagaussi.png");
-	b[12].img = carregaBitmapBT("botao.png");
+	b[12].img = carregaBitmapBT("operalaplace.png");
 
 	for(i=0; i<QTD_BT;i++) {
 		if(b[i].img==NULL)/*verifica se todos os botoes foram carregados com sucesso*/
@@ -1117,15 +1117,11 @@ double **calculalaplace(int r, float sig, int n){
 	for (i=0; i<n;i++)
         mascara[i] = (double *) malloc (n*sizeof(double)); 
         
-        
     //Aplicacao do calculo do filtro gaussiano para cada pixel da mascara
     for (i=-r;i<=r;i++){
         for(j=-r;j<=r;j++){           
             aux = ((i*i) + (j*j)) / (2*sig*sig);
             mascara[i+r][j+r]=-(1/(M_PI*pow(sig,4)))*(1 - aux)*exp(-aux);
-            
-            //printf("i:%d, j%d, %lf", i,j,mascara[i+r][j+r]);
-            
         }
     }
     
@@ -1205,8 +1201,6 @@ unsigned char **operalaplace(ALLEGRO_DISPLAY *janela, unsigned char **data, int 
 
     //E chamada a funcao que faz o calculo dos pesos da mascara
 	mascara = calculalaplace(r,sig,n);
-    
-    
 
     //Laco que percorre a imagem pixel a pixel
     for (i=0; i<altura;i++){
@@ -1219,32 +1213,20 @@ unsigned char **operalaplace(ALLEGRO_DISPLAY *janela, unsigned char **data, int 
                 o= -r;
                 
                 for (l=j-r;l<=j+r;l++){
-                //    printf("[%d]  [%d]",i,j);
                     //Se o vizinho for um pixel da imagem multiplica-se o seu nivel de cinza com o peso da mascara naquela posicao, se for um pixel da borda nao soma nada(zero)
                     if (k>=0 && k<altura && l>=0 && l<largura){
                        soma+=(data[k][l]*mascara[m+r][o+r]); 
-                    
                     }
-                    //printf(" - Soma [%d][%d] = %f \n",k,l,soma); 
                     o++;
                 }
-                
                 m++;
             }
-            //system("pause");
             //Quando todos o pesos foram somados, arredonda-se o valor para o inteiro mais proximo e guarda na nova matriz
             matriz[i][j] = normalizacao(data[i][j] - soma);
-            //if ((round(data[i][j] - soma) < 0) || (round(data[i][j] - soma) > 255)){
-            //printf("ALOOOOOO Matriz[%d][%d] = %d  Soma = %f\n ",i,j,data[i][j],soma);
-            //system("pause");}
         }       
     }
-
-
     free(mascara);
-	
 	return matriz;
-
 }
 
 
