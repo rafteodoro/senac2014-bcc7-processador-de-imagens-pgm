@@ -1117,7 +1117,7 @@ double **calculalaplace(int r, float sig, int n){
 	for (i=0; i<n;i++)
         mascara[i] = (double *) malloc (n*sizeof(double)); 
         
-    //Aplicacao do calculo do filtro gaussiano para cada pixel da mascara
+    //Aplicacao do calculo do filtro laplaciano para cada pixel da mascara
     for (i=-r;i<=r;i++){
         for(j=-r;j<=r;j++){           
             aux = ((i*i) + (j*j)) / (2*sig*sig);
@@ -1194,11 +1194,6 @@ unsigned char **operalaplace(ALLEGRO_DISPLAY *janela, unsigned char **data, int 
 	//O valor de r e calculado para encontrar o centro da mascara 
 	r = (n-1)/2;
 	
-	//Realizamos a alocação da matriz da mascara na memoria
-	mascara =(double **)malloc(n*sizeof(double*));
-	for (i=0; i<n;i++)
-        mascara[i] = (double *) malloc (n*sizeof(double)); 
-
     //E chamada a funcao que faz o calculo dos pesos da mascara
 	mascara = calculalaplace(r,sig,n);
 
@@ -1221,7 +1216,7 @@ unsigned char **operalaplace(ALLEGRO_DISPLAY *janela, unsigned char **data, int 
                 }
                 m++;
             }
-            //Quando todos o pesos foram somados, arredonda-se o valor para o inteiro mais proximo e guarda na nova matriz
+
             matriz[i][j] = normalizacao(data[i][j] - soma);
         }       
     }
