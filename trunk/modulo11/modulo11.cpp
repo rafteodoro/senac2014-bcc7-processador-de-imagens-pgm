@@ -1226,7 +1226,7 @@ unsigned char **operalaplace(ALLEGRO_DISPLAY *janela, unsigned char **data, int 
 	return matriz;
 }
 
-int **getElementoEst(int n)
+int **getElementoEst(ALLEGRO_DISPLAY *janela, int n)
 {
     int **est, i, j, buf;
     
@@ -1253,7 +1253,12 @@ int **getElementoEst(int n)
 	           free(est);
 	           fclose(arquivo);
 	           return NULL;
-          }          
+          }
+          if (est[i][j] > 255){
+               al_show_native_message_box(janela, "Valor Invalido", "Valor nao pode ser maior que 255.", "O valor sera ajustado para 255.", NULL, ALLEGRO_MESSAGEBOX_WARN);
+		       est[i][j]=255;
+          }
+                                  
        }
                      
     }
@@ -1264,7 +1269,7 @@ int **getElementoEst(int n)
 
 unsigned char **erosao(ALLEGRO_DISPLAY *janela, unsigned char **data, int altura, int largura)
 {
-    int i, j, l, k, n=0, r, maior = 0,m,o;
+    int i, j, l, k, n=0, r, menor, m, o;
     unsigned char **matriz;
     int **est;
     matriz = alocaMatriz(altura, largura);
@@ -1301,21 +1306,20 @@ unsigned char **erosao(ALLEGRO_DISPLAY *janela, unsigned char **data, int altura
 		n--;
 	}
 	
-	est = getElementoEst(n);//pega elemento estruturante
+	est = getElementoEst(janela,n);//pega elemento estruturante
+	if(est==NULL)
+    {
+         return NULL;
+    }
 	
 	//O valor de r e calculado para encontrar o centro da mascara 
-	r = (n-1)/2;
-/*	
-	for (i=0;i<5;i++)
-	    for(j=0;j<5;j++)
-                       printf("\n[%d][%d] %d",i,j,est[i][j]);
+	r =(n-1)/2;
 	
-	system("pause");*/
 	// Laco que vai percorrer todos os pixels da imagem
 	for (i=0;i<altura;i++){
         for (j=0;j<largura;j++){
             m=-r;
-            maior=-1;
+            menor=256;
             
             //Laco que vai percorrer os vizinhos de cada pixel
             for (k=i-r;k<=i+r;k++){
@@ -1323,17 +1327,15 @@ unsigned char **erosao(ALLEGRO_DISPLAY *janela, unsigned char **data, int altura
                 for (l=j-r;l<=j+r;l++){
                     
                     if (k>=0 && k<altura && l>=0 && l<largura)
-                       if(data[k][l] > maior)//encontra a menor tonalizaçao de cinza para posicionar o elemento estruturante
-                            maior = data[k][l] + est[m+r][o+r];      
+                       if (est[m+r][o+r] >= 0)
+                          if(data[k][l] < menor)//encontra a menor tonalizaçao de cinza para posicionar o elemento estruturante
+                               menor = data[k][l] + est[m+r][o+r];      
                     o++;
-                    //printf("\n[%d][%d] - %d",i,j,maior);   
                 }
                 m++;
-                
-                //system("pause");
             }
             
-            matriz[i][j] = normalizacao(maior);
+            matriz[i][j] = normalizacao(menor);
 
         }
     }
@@ -1830,7 +1832,7 @@ int main(int argc, char argv[]) {
 						InserirNodo(head->data, head->largura, head->altura);
                         head->data = erosao(janela, head->prox->data, head->prox->altura, head->prox->largura);
                         if(head->data==NULL){
-							al_show_native_message_box(janela, "Erro", "Erro ao carregar arquivo de qtde de vizinhos", erroMsgBuf, NULL, ALLEGRO_MESSAGEBOX_ERROR);
+							al_show_native_message_box(janela, "Erro", "Erro ao aplicar a EROSAO", erroMsgBuf, NULL, ALLEGRO_MESSAGEBOX_ERROR);
 							head = head->prox;
 							free(head->ante);
 							head->ante=NULL;
