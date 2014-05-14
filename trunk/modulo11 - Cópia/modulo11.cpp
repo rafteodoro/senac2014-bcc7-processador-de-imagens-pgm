@@ -1230,27 +1230,27 @@ unsigned char **getElementoEst(int n)
     unsigned char **est = alocaMatriz(n,n);
    	int i, j, buf;
   
-   	
     FILE *arquivo;
-    if((arquivo = fopen("k.txt", "r+b"))==NULL) {
+    if((arquivo = fopen("k.txt", "r"))==NULL) {
 		printf("Arquivo nao pode ser aberto\n");
 		erroMsgBuf = "Arquivo de elemento estruturante nao pode ser encontrado.";
 		desalocaMatriz(est, n);
 		fclose(arquivo);
 		return NULL;
 	}
-	 	printf("AQUI!!!");
-	for(i=0;i<n;i++){
+	
+    for(i=0;i<n;i++){
        for(j=0;j<n;j++)
        {
-           if(fscanf(arquivo, "%d", &buf) != 1){
+           if(fscanf(arquivo, "%d", &est[i][j]) != 1){
                printf("erro na leitura do arquivo k.txt\n");
 	           erroMsgBuf = "Arquivo de elemento estruturante invalido.";
 	           desalocaMatriz(est, n);
 	           fclose(arquivo);
 	           return NULL;
-          }            
-       }                 
+          }          
+       }
+                     
     }
    	fclose(arquivo);  
     return est;
@@ -1259,9 +1259,9 @@ unsigned char **getElementoEst(int n)
 
 unsigned char **erosao(ALLEGRO_DISPLAY *janela, unsigned char **data, int altura, int largura)
 {
-    int i, j, l, k, n=0, r;
+    int i, j, l, k, n=0, r, min = 255;
     double soma;
-    unsigned char **matriz;
+    unsigned char **matriz, **est;
     matriz = alocaMatriz(altura, largura);
     const char *diretorio = "vizinhos.txt";
     FILE *arquivo;
@@ -1296,22 +1296,32 @@ unsigned char **erosao(ALLEGRO_DISPLAY *janela, unsigned char **data, int altura
 		n--;
 	}
 	
+	est = getElementoEst(n);//pega elemento estruturante
+	
 	//O valor de r e calculado para encontrar o centro da mascara 
 	r = (n-1)/2;
 	
-	
-	unsigned char ** est = getElementoEst(n);
-//	printf("n:%d\n",n);
-	for(i=0;i<n;i++){
-      // printf("\n");
-       for(j=0;j<n;j++){
-         //printf("%d",est[i][j]);
-       }  
-    }
-	
-	
+	// Laco que vai percorrer todos os pixels da imagem
+	for (i=0;i<altura;i++){
+        for (j=0;j<largura;j++){
+            soma=0; 
+            
+            //Laco que vai percorrer os vizinhos de cada pixel
+            for (k=i-r;k<=i+r;k++){
+                for (l=j-r;l<=j+r;l++){
+                    
+                    if (k>=0 && k<altura && l>=0 && l<largura)
+                       if(data[k][l] < min)//encontra a menor tonaliza�ao de cinza para posicionar o elemento estruturante
+                            min = data[k][l];         
+                }
+            }
+            //A nova matriz recebe o acumulado do nнvel de cinza dos vizinhos e divide pelo valor de n ao quadrado, que й o numero total de vizinhos (incluindo o pixel atual). Assim, calculando a mйdia, que serб arredondada.
+            matriz[i][j] = normalizacao(soma/pow((double)n,2));
 
-    return data;
+        }
+    }
+    //Retorna a matriz completa para o mйtodo principal
+    return matriz;
 }
 
 
