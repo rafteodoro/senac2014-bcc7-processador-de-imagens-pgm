@@ -1221,16 +1221,52 @@ unsigned char **operalaplace(ALLEGRO_DISPLAY *janela, unsigned char **data, int 
             matriz[i][j] = normalizacao(data[i][j] - soma);
         }       
     }
+    
     free(mascara);
 	return matriz;
+}
+
+int **getElementoEst(int n)
+{
+    int **est, i, j, buf;
+    
+    //Alocacao da matriz mascara 
+   	est =(int **)malloc(n*sizeof(int*));
+	for (i=0; i<n;i++)
+        est[i] = (int *) malloc (n*sizeof(int)); 
+  
+    FILE *arquivo;
+    if((arquivo = fopen("k.txt", "r"))==NULL) {
+		printf("Arquivo nao pode ser aberto\n");
+		erroMsgBuf = "Arquivo de elemento estruturante nao pode ser encontrado.";
+		free(est);
+		fclose(arquivo);
+		return NULL;
+	}
+	
+    for(i=0;i<n;i++){
+       for(j=0;j<n;j++)
+       {
+           if(fscanf(arquivo, "%d", &est[i][j]) != 1){
+               printf("erro na leitura do arquivo k.txt\n");
+	           erroMsgBuf = "Arquivo de elemento estruturante invalido.";
+	           free(est);
+	           fclose(arquivo);
+	           return NULL;
+          }          
+       }
+                     
+    }
+   	fclose(arquivo);  
+    return est;
 }
 
 
 unsigned char **erosao(ALLEGRO_DISPLAY *janela, unsigned char **data, int altura, int largura)
 {
-    int i, j, l, k, n=0, r;
-    double soma;
+    int i, j, l, k, n=0, r, maior = 0,m,o;
     unsigned char **matriz;
+    int **est;
     matriz = alocaMatriz(altura, largura);
     const char *diretorio = "vizinhos.txt";
     FILE *arquivo;
@@ -1265,24 +1301,39 @@ unsigned char **erosao(ALLEGRO_DISPLAY *janela, unsigned char **data, int altura
 		n--;
 	}
 	
+	est = getElementoEst(n);//pega elemento estruturante
+	
 	//O valor de r e calculado para encontrar o centro da mascara 
 	r = (n-1)/2;
+/*	
+	for (i=0;i<5;i++)
+	    for(j=0;j<5;j++)
+                       printf("\n[%d][%d] %d",i,j,est[i][j]);
 	
+	system("pause");*/
 	// Laco que vai percorrer todos os pixels da imagem
 	for (i=0;i<altura;i++){
         for (j=0;j<largura;j++){
-            soma=0; 
+            m=-r;
+            maior=-1;
             
             //Laco que vai percorrer os vizinhos de cada pixel
             for (k=i-r;k<=i+r;k++){
+                o=-r;
                 for (l=j-r;l<=j+r;l++){
-                    //Se o vizinho for um pixel da imagem soma-se o seu nivel de cinza, se for um pixel da borda nao soma nada (zero)
+                    
                     if (k>=0 && k<altura && l>=0 && l<largura)
-                       soma+=data[k][l];         
+                       if((data[k][l] + est[m+r][o+r]) > maior)//encontra a menor tonaliza�ao de cinza para posicionar o elemento estruturante
+                            maior = data[k][l] + est[m+r][o+r];      
+                    o++;
+                    //printf("\n[%d][%d] - %d",i,j,maior);   
                 }
+                m++;
+                
+                //system("pause");
             }
-            //A nova matriz recebe o acumulado do nнvel de cinza dos vizinhos e divide pelo valor de n ao quadrado, que й o numero total de vizinhos (incluindo o pixel atual). Assim, calculando a mйdia, que serб arredondada.
-            matriz[i][j] = normalizacao(soma/pow((double)n,2));
+            
+            matriz[i][j] = normalizacao(maior);
 
         }
     }
@@ -1777,7 +1828,7 @@ int main(int argc, char argv[]) {
                 case 13:
 					if(botoes[13].ativo==true){
 						InserirNodo(head->data, head->largura, head->altura);
-                        head->data = operalaplace(janela, head->prox->data, head->prox->altura, head->prox->largura);
+                        head->data = erosao(janela, head->prox->data, head->prox->altura, head->prox->largura);
                         if(head->data==NULL){
 							al_show_native_message_box(janela, "Erro", "Erro ao carregar arquivo de qtde de vizinhos", erroMsgBuf, NULL, ALLEGRO_MESSAGEBOX_ERROR);
 							head = head->prox;
