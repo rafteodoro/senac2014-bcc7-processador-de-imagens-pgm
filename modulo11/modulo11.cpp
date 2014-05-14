@@ -1323,7 +1323,7 @@ unsigned char **erosao(ALLEGRO_DISPLAY *janela, unsigned char **data, int altura
                 for (l=j-r;l<=j+r;l++){
                     
                     if (k>=0 && k<altura && l>=0 && l<largura)
-                       if((data[k][l] + est[m+r][o+r]) > maior)//encontra a menor tonalizaçao de cinza para posicionar o elemento estruturante
+                       if(data[k][l] > maior)//encontra a menor tonalizaçao de cinza para posicionar o elemento estruturante
                             maior = data[k][l] + est[m+r][o+r];      
                     o++;
                     //printf("\n[%d][%d] - %d",i,j,maior);   
