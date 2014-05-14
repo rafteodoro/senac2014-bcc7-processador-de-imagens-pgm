@@ -1326,10 +1326,20 @@ unsigned char **erosao(ALLEGRO_DISPLAY *janela, unsigned char **data, int altura
                 o=-r;
                 for (l=j-r;l<=j+r;l++){
                     
-                    if (k>=0 && k<altura && l>=0 && l<largura)
-                       if (est[m+r][o+r] >= 0)
-                          if(data[k][l] < menor)//encontra a menor tonalizaçao de cinza para posicionar o elemento estruturante
-                               menor = data[k][l] + est[m+r][o+r];      
+                    if (k>=0 && k<altura && l>=0 && l<largura){
+                       if (est[m+r][o+r] >= 0){
+                               if ((data[k][l] - est[m+r][o+r]) < menor)
+                                  menor = data[k][l] - est[m+r][o+r];
+                       }
+                       
+                       else
+                           if(255 < menor)
+                                menor=255;
+                    }
+                    else
+                        if (-est[m+r][o+r] < menor)
+                           menor = -est[m+r][o+r];  
+                                     
                     o++;
                 }
                 m++;
