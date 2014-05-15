@@ -8,7 +8,7 @@
 #include <allegro5/allegro_primitives.h>
 #include "allegro5/allegro_image.h"
 
-#define QTD_BT 14//quantidade de botoes
+#define QTD_BT 15//quantidade de botoes
 #define QTD_VERSOES 1//quantidade de versoes suportadas
 #define QTD_INTERVALO 255//quantidade maxima de intervalos
 
@@ -492,6 +492,7 @@ int criaMenu(Botao b[]) {
 	b[11].img = carregaBitmapBT("operagaussi.png");
 	b[12].img = carregaBitmapBT("operalaplace.png");
 	b[13].img = carregaBitmapBT("erosao.png");
+	b[14].img = carregaBitmapBT("dilatacao.png");
 
 	for(i=0; i<QTD_BT;i++) {
 		if(b[i].img==NULL)/*verifica se todos os botoes foram carregados com sucesso*/
@@ -1221,20 +1222,25 @@ unsigned char **operalaplace(ALLEGRO_DISPLAY *janela, unsigned char **data, int 
             matriz[i][j] = normalizacao(data[i][j] - soma);
         }       
     }
+    
     free(mascara);
 	return matriz;
 }
 
-unsigned char **getElementoEst(int n)
+int **getElementoEst(ALLEGRO_DISPLAY *janela, int n)
 {
-    unsigned char **est = alocaMatriz(n,n);
-   	int i, j, buf;
+    int **est, i, j, buf;
+    
+    //Alocacao da matriz mascara 
+   	est =(int **)malloc(n*sizeof(int*));
+	for (i=0; i<n;i++)
+        est[i] = (int *) malloc (n*sizeof(int)); 
   
     FILE *arquivo;
     if((arquivo = fopen("k.txt", "r"))==NULL) {
 		printf("Arquivo nao pode ser aberto\n");
 		erroMsgBuf = "Arquivo de elemento estruturante nao pode ser encontrado.";
-		desalocaMatriz(est, n);
+		free(est);
 		fclose(arquivo);
 		return NULL;
 	}
@@ -1245,10 +1251,15 @@ unsigned char **getElementoEst(int n)
            if(fscanf(arquivo, "%d", &est[i][j]) != 1){
                printf("erro na leitura do arquivo k.txt\n");
 	           erroMsgBuf = "Arquivo de elemento estruturante invalido.";
-	           desalocaMatriz(est, n);
+	           free(est);
 	           fclose(arquivo);
 	           return NULL;
-          }          
+          }
+          if (est[i][j] > 255){
+               al_show_native_message_box(janela, "Valor Invalido", "Valor nao pode ser maior que 255.", "O valor sera ajustado para 255.", NULL, ALLEGRO_MESSAGEBOX_WARN);
+		       est[i][j]=255;
+          }
+                                  
        }
                      
     }
@@ -1259,9 +1270,9 @@ unsigned char **getElementoEst(int n)
 
 unsigned char **erosao(ALLEGRO_DISPLAY *janela, unsigned char **data, int altura, int largura)
 {
-    int i, j, l, k, n=0, r, min = 255;
-    double soma;
-    unsigned char **matriz, **est;
+    int i, j, l, k, n=0, r, menor, m, o;
+    unsigned char **matriz;
+    int **est;
     matriz = alocaMatriz(altura, largura);
     const char *diretorio = "vizinhos.txt";
     FILE *arquivo;
@@ -1296,27 +1307,46 @@ unsigned char **erosao(ALLEGRO_DISPLAY *janela, unsigned char **data, int altura
 		n--;
 	}
 	
-	est = getElementoEst(n);//pega elemento estruturante
+	est = getElementoEst(janela,n);//pega elemento estruturante
+	if(est==NULL)
+    {
+         return NULL;
+    }
 	
 	//O valor de r e calculado para encontrar o centro da mascara 
-	r = (n-1)/2;
+	r =(n-1)/2;
 	
 	// Laco que vai percorrer todos os pixels da imagem
 	for (i=0;i<altura;i++){
         for (j=0;j<largura;j++){
-            soma=0; 
+            m=-r;
+            menor=256;
             
             //Laco que vai percorrer os vizinhos de cada pixel
             for (k=i-r;k<=i+r;k++){
+                o=-r;
                 for (l=j-r;l<=j+r;l++){
                     
-                    if (k>=0 && k<altura && l>=0 && l<largura)
-                       if(data[k][l] < min)//encontra a menor tonaliza�ao de cinza para posicionar o elemento estruturante
-                            min = data[k][l];         
+                    if (k>=0 && k<altura && l>=0 && l<largura){
+                       if (est[m+r][o+r] >= 0){
+                               if ((data[k][l] - est[m+r][o+r]) < menor)
+                                  menor = data[k][l] - est[m+r][o+r];
+                       }
+                       
+                       else
+                           if(255 < menor)
+                                menor=255;
+                    }
+                    else
+                        if (-est[m+r][o+r] < menor)
+                           menor = -est[m+r][o+r];  
+                                     
+                    o++;
                 }
+                m++;
             }
-            //A nova matriz recebe o acumulado do nнvel de cinza dos vizinhos e divide pelo valor de n ao quadrado, que й o numero total de vizinhos (incluindo o pixel atual). Assim, calculando a mйdia, que serб arredondada.
-            matriz[i][j] = normalizacao(soma/pow((double)n,2));
+            
+            matriz[i][j] = normalizacao(menor);
 
         }
     }
@@ -1474,6 +1504,7 @@ int main(int argc, char argv[]) {
 								botoes[11].ativo=false;
 								botoes[12].ativo=false;
 								botoes[13].ativo=false;
+								botoes[14].ativo=false;
 
 								/*limpa a tela*/
 								al_clear_to_color(al_map_rgb(corFundo, corFundo, corFundo));
@@ -1503,6 +1534,7 @@ int main(int argc, char argv[]) {
 							botoes[11].ativo=true;
                             botoes[12].ativo=true;
                             botoes[13].ativo=true;
+                            botoes[14].ativo=true;
                             
                             calculaFileira(head->largura);
 							defBotaoPos(botoes);
@@ -1813,7 +1845,34 @@ int main(int argc, char argv[]) {
 						InserirNodo(head->data, head->largura, head->altura);
                         head->data = erosao(janela, head->prox->data, head->prox->altura, head->prox->largura);
                         if(head->data==NULL){
-							al_show_native_message_box(janela, "Erro", "Erro ao carregar arquivo de qtde de vizinhos", erroMsgBuf, NULL, ALLEGRO_MESSAGEBOX_ERROR);
+							al_show_native_message_box(janela, "Erro", "Erro ao aplicar a EROSAO", erroMsgBuf, NULL, ALLEGRO_MESSAGEBOX_ERROR);
+							head = head->prox;
+							free(head->ante);
+							head->ante=NULL;
+							desenhaMenu(janela, botoes);
+					     	al_flip_display();
+                            break;
+						}
+						undo++;
+                        redo=0;
+						botoes[1].ativo=true;
+                        botoes[4].ativo=true;
+						botoes[5].ativo = false;
+                        desenha(janela, head->data, head->altura, head->largura, (bL - head->largura)/2, bA);
+                        desenhaMenu(janela, botoes);
+						al_flip_display();
+					}
+					else {
+                         printf("Botao inativo\n");
+                    }
+				break;
+				
+				case 14:
+					if(botoes[14].ativo==true){
+						InserirNodo(head->data, head->largura, head->altura);
+                        head->data = erosao(janela, head->prox->data, head->prox->altura, head->prox->largura);
+                        if(head->data==NULL){
+							al_show_native_message_box(janela, "Erro", "Erro ao aplicar a Dilatacao", erroMsgBuf, NULL, ALLEGRO_MESSAGEBOX_ERROR);
 							head = head->prox;
 							free(head->ante);
 							head->ante=NULL;
