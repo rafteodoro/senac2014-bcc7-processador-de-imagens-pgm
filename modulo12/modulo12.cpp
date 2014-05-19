@@ -1267,7 +1267,6 @@ int **getElementoEst(ALLEGRO_DISPLAY *janela, int n)
     return est;
 }
 
-
 unsigned char **erosao(ALLEGRO_DISPLAY *janela, unsigned char **data, int altura, int largura)
 {
     int i, j, l, k, n=0, r, menor, m, o;
@@ -1353,6 +1352,133 @@ unsigned char **erosao(ALLEGRO_DISPLAY *janela, unsigned char **data, int altura
     //Retorna a matriz completa para o mйtodo principal
     return matriz;
 }
+
+void reflexo(int **est, int n)
+{
+     int i, j, aux;
+     
+     printf("Obj Est:\n");
+     for(i=0; i<n; i++)
+     {
+         for(j=0; j<n; j++)
+         {
+             printf("%d ", est[i][j]);
+         }
+         printf("\n");
+     }
+      
+     for(i=0; i<n/2; i++)
+     {
+         for(j=0; j<n; j++)
+         {
+             aux = est[i][j]; 
+             est[i][j] = est[n-i-1][n-j-1];
+             est[n-i-1][n-j-1] = aux;
+         
+         }         
+     }
+  
+     printf("Refletido:\n");
+     for(i=0; i<n; i++)
+     {
+         for(j=0; j<n; j++)
+         {
+             printf("%d ", est[i][j]);
+         }
+         printf("\n");
+     }
+}
+
+unsigned char **dilatacao(ALLEGRO_DISPLAY *janela, unsigned char **data, int altura, int largura)
+{
+    int i, j, l, k, n=0, r, maior, m, o;
+    unsigned char **matriz;
+    int **est;
+    matriz = alocaMatriz(altura, largura);
+    const char *diretorio = "vizinhos.txt";
+    FILE *arquivo;
+    
+
+   	if((arquivo = fopen(diretorio, "r+b"))==NULL) {
+		printf("Arquivo '%s' nao pode ser aberto\n",diretorio);
+		erroMsgBuf = "Arquivo vizinhos.txt nao pode ser encontrado.";
+		desalocaMatriz(matriz, altura);
+		fclose(arquivo);
+		return NULL;
+	}
+
+	if(fscanf(arquivo, "%d", &n) != 1){
+		printf("Texto formatado errado\n");
+		erroMsgBuf = "Arquivo de configuracao invalido.";
+		desalocaMatriz(matriz, altura);
+		fclose(arquivo);
+		return NULL;
+	}
+	fclose(arquivo);
+
+    //Se o valor de n contido no arquivo vizinhos.txt for menor que 3 o programa envia um aviso e ajusta o valor para 3.
+	if(n < 3){
+		al_show_native_message_box(janela, "Valor Invalido", "Valor informado menor que o permitido.", "O valor foi ajustado para 3.", NULL, ALLEGRO_MESSAGEBOX_WARN);
+		n = 3;
+	}
+    
+    //Se o valor de n contido no arquivo vizinhos.txt for um numero par maior que 3 o programa envia um aviso e ajusta o valor para o impar menor mais proximo do valor encontrado.
+	if(n%2==0){
+		al_show_native_message_box(janela, "Valor Invalido", "Valor informado e par.", "O valor sera ajustado para o impar menor mais proximo.", NULL, ALLEGRO_MESSAGEBOX_WARN);
+		n--;
+	}
+	
+	est = getElementoEst(janela,n);//pega elemento estruturante
+	
+    if(est==NULL)
+    {
+         return NULL;
+    }
+    
+    reflexo(est, n);//reflete o elemento estruturante
+	
+	//O valor de r e calculado para encontrar o centro da mascara 
+	r =(n-1)/2;
+	
+	// Laco que vai percorrer todos os pixels da imagem
+	for (i=0;i<altura;i++){
+        for (j=0;j<largura;j++){
+            m=-r;
+            maior=0;
+            
+            //Laco que vai percorrer os vizinhos de cada pixel
+            for (k=i-r;k<=i+r;k++){
+                o=-r;
+                for (l=j-r;l<=j+r;l++){
+                    
+                    if (k>=0 && k<altura && l>=0 && l<largura){
+                       if (est[m+r][o+r] >= 0){
+                               if ((data[k][l] + est[m+r][o+r]) > maior)
+                                  maior = data[k][l] + est[m+r][o+r];
+                       }
+                       
+                       else
+                           if(0 > maior)
+                                maior=0;
+                    }
+                    else
+                        if (est[m+r][o+r] > maior)
+                           maior = est[m+r][o+r];  
+                                     
+                    o++;
+                }
+                m++;
+            }
+            
+            matriz[i][j] = normalizacao(maior);
+
+        }
+    }
+    //Retorna a matriz completa para o mйtodo principal
+    return matriz;
+}
+
+
 
 
 /*metodo principal, gerencia a janela*/
@@ -1870,7 +1996,7 @@ int main(int argc, char argv[]) {
 				case 14:
 					if(botoes[14].ativo==true){
 						InserirNodo(head->data, head->largura, head->altura);
-                        head->data = erosao(janela, head->prox->data, head->prox->altura, head->prox->largura);
+                        head->data = dilatacao(janela, head->prox->data, head->prox->altura, head->prox->largura);
                         if(head->data==NULL){
 							al_show_native_message_box(janela, "Erro", "Erro ao aplicar a Dilatacao", erroMsgBuf, NULL, ALLEGRO_MESSAGEBOX_ERROR);
 							head = head->prox;
