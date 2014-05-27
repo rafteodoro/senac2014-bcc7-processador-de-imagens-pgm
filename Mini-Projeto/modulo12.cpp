@@ -1,13 +1,14 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <fcntl.h>
+#define _USE_MATH_DEFINES
 #include <math.h>
 #include <allegro5/allegro.h>
 #include <allegro5/allegro_native_dialog.h>
 #include <allegro5/allegro_primitives.h>
 #include "allegro5/allegro_image.h"
 
-#define QTD_BT 11//quantidade de botoes
+#define QTD_BT 15//quantidade de botoes
 #define QTD_VERSOES 1//quantidade de versoes suportadas
 #define QTD_INTERVALO 255//quantidade maxima de intervalos
 
@@ -138,7 +139,7 @@ int getCabecalho(FILE *arquivo, int *maxCor, char *tipo, Nodo *no) {
 		return -1;
 	}
 
-	/*Verifica vers„o da imagem*/
+	/*Verifica vers–≥o da imagem*/
 	buf = getc(arquivo);
 	for(i=0; i< QTD_VERSOES; i++) {
 		if(buf==VERSOES[i])
@@ -488,6 +489,10 @@ int criaMenu(Botao b[]) {
 	b[8].img = carregaBitmapBT("histograma.png");
 	b[9].img = carregaBitmapBT("filtromedia.png");
 	b[10].img = carregaBitmapBT("filtromediana.png");
+	b[11].img = carregaBitmapBT("operagaussi.png");
+	b[12].img = carregaBitmapBT("operalaplace.png");
+	b[13].img = carregaBitmapBT("erosao.png");
+	b[14].img = carregaBitmapBT("dilatacao.png");
 
 	for(i=0; i<QTD_BT;i++) {
 		if(b[i].img==NULL)/*verifica se todos os botoes foram carregados com sucesso*/
@@ -645,11 +650,11 @@ int arredondamento (double x){
     double ant=x;
     x -= (int)x; //Retira a parte inteira do valor de x
     
-    //Se x for maior que 0.5 a funÁ„o retornar· o menor valor inteiro depois de ant
+    //Se x for maior que 0.5 a fun–∑–≥o retornar–± o menor valor inteiro depois de ant
     if (x > .5)
        return (int)ceil(ant); 
     else
-       return (int)floor(ant); //Se x for igual ou menor que 0.5 a funÁ„o retornar· o maior valor inteiro antes de ant;
+       return (int)floor(ant); //Se x for igual ou menor que 0.5 a fun–∑–≥o retornar–± o maior valor inteiro antes de ant;
 } 
 
 unsigned char **dithering(unsigned char **data, int altura, int largura, int maxCor){
@@ -808,34 +813,34 @@ unsigned char **filtromedia(ALLEGRO_DISPLAY *janela, unsigned char **data, int a
 		n = 3;
 	}
     
-    //Se o valor de n contido no arquivo vizinhos.txt for um n˙mero par maior que 3 o programa envia um aviso e ajusta o valor para o Ìmpar menor mais prÛximo do valor encontrado.
+    //Se o valor de n contido no arquivo vizinhos.txt for um n—ämero par maior que 3 o programa envia um aviso e ajusta o valor para o –Ωmpar menor mais pr—Éximo do valor encontrado.
 	if(n%2==0){
 		al_show_native_message_box(janela, "Valor Invalido", "Valor informado e par.", "O valor sera ajustado para o impar menor mais proximo.", NULL, ALLEGRO_MESSAGEBOX_WARN);
 		n--;
 	}
 	
-	//O valor de r È calculado para encontrar o centro da mascara 
+	//O valor de r –π calculado para encontrar o centro da mascara 
 	r = (n-1)/2;
 	
-	// LaÁo que vai percorrer todos os pixels da imagem
+	// La–∑o que vai percorrer todos os pixels da imagem
 	for (i=0;i<altura;i++){
         for (j=0;j<largura;j++){
             soma=0; 
             
-            //LaÁo que vai percorrer os vizinhos de cada pixel
+            //La–∑o que vai percorrer os vizinhos de cada pixel
             for (k=i-r;k<=i+r;k++){
                 for (l=j-r;l<=j+r;l++){
-                    //Se o vizinho for um pixel da imagem soma-se o seu nÌvel de cinza, se for um pixel da borda n„o soma nada (zero)
+                    //Se o vizinho for um pixel da imagem soma-se o seu n–Ωvel de cinza, se for um pixel da borda n–≥o soma nada (zero)
                     if (k>=0 && k<altura && l>=0 && l<largura)
                        soma+=data[k][l];         
                 }
             }
-            //A nova matriz recebe o acumulado do nÌvel de cinza dos vizinhos e divide pelo valor de n ao quadrado, que È o numero total de vizinhos (incluindo o pixel atual). Assim, calculando a mÈdia, que ser· arredondada.
+            //A nova matriz recebe o acumulado do n–Ωvel de cinza dos vizinhos e divide pelo valor de n ao quadrado, que –π o numero total de vizinhos (incluindo o pixel atual). Assim, calculando a m–πdia, que ser–± arredondada.
             matriz[i][j] = arredondamento(soma/pow((double)n,2));
 
         }
     }
-    //Retorna a matriz completa para o mÈtodo principal
+    //Retorna a matriz completa para o m–πtodo principal
     return matriz;
 }
 
@@ -847,7 +852,7 @@ void insertionsort (unsigned char *vetor, int inicio, int totalviz)
         // A variavel aux recebe o valor contido no indice i e o comparamos com os outros elementos do vetor que ja estao ordenados, ou seja, a esquerda do mesmo
         aux = vetor[i];
         j = i-1;
-        //Quando aux È menor que o vetor[j], valor[j] È movido uma posicao para a direita ate o valor de aux ser maior que o valor contido em vetor[j] ou chegarmos ao fim do vetor (j<0)  
+        //Quando aux –π menor que o vetor[j], valor[j] –π movido uma posicao para a direita ate o valor de aux ser maior que o valor contido em vetor[j] ou chegarmos ao fim do vetor (j<0)  
         while ((j>=0) && (aux < vetor[j])){
               vetor[j+1]= vetor[j];
               j--;
@@ -858,24 +863,24 @@ void insertionsort (unsigned char *vetor, int inicio, int totalviz)
 }
 
 int particao (unsigned char *vetor, int inicio, int totalviz){
-    //Iniciamos no Inicio +1 porque o Inicio[0] ser· o pivo
+    //Iniciamos no Inicio +1 porque o Inicio[0] ser–± o pivo
     int esq = inicio+1;
     int dir = totalviz;
     int aux;
     unsigned char pivo = vetor[inicio];
     while (esq <= dir)
     {
-          //Se o valor a esquerda do vetor È menor ou igual ao pivo, o indice vai para o proximo valor a direita +1
+          //Se o valor a esquerda do vetor –π menor ou igual ao pivo, o indice vai para o proximo valor a direita +1
           if (vetor[esq] <= pivo){
              esq++;
              continue;
           }
-          //Se o valor a direita do vetor È maior que o pivo, o indice vai para o proximo valor a esquerda -1
+          //Se o valor a direita do vetor –π maior que o pivo, o indice vai para o proximo valor a esquerda -1
           if (vetor[dir] > pivo){
              dir--;
              continue;
           }
-          //Se o valor a esquerda È maior e o da direita È menor que o pivo, trocamos os dois de lado e os dois indices andam +1 e -1 respectivamente
+          //Se o valor a esquerda –π maior e o da direita –π menor que o pivo, trocamos os dois de lado e os dois indices andam +1 e -1 respectivamente
           aux = vetor[esq];
           vetor[esq] = vetor[dir];
           vetor[dir] = aux;
@@ -889,16 +894,16 @@ int particao (unsigned char *vetor, int inicio, int totalviz){
 }
           
           
-//FunÁ„o que faz a escolha pelo metodo quicksort ou insertion sort
+//Fun–∑–≥o que faz a escolha pelo metodo quicksort ou insertion sort
 void sort (unsigned char *vetor, int inicio, int totalviz){
      int divide;
      if (inicio < totalviz)
      {
           //Quando o total de pixels da mascara (tamanho do vetor) for menor que 9, utilizamos o Insertion Sort, quando for maior utilizamos o Quicksort
-          if ((totalviz - inicio) <= 9)
+          if ((totalviz - inicio) <= 0)
              insertionsort(vetor, inicio, totalviz);
           else{
-               //Inicia-se o mÈtodo quicksort onde a funcao particao pega um numero como pivo e organiza os valores maiores e menores que ele no vetor
+               //Inicia-se o m–πtodo quicksort onde a funcao particao pega um numero como pivo e organiza os valores maiores e menores que ele no vetor
                divide = particao(vetor, inicio, totalviz);
                //Chamamos esta funcao recursivamente para reorganizar os subgrupos divididos entre o pivo ate que cada subgrupo contenha um elemento
                sort(vetor, inicio, divide - 1);
@@ -939,29 +944,29 @@ unsigned char **filtromediana(ALLEGRO_DISPLAY *janela, unsigned char **data, int
 		n = 3;
 	}
     
-    //Se o valor de n contido no arquivo vizinhos.txt for um n˙mero par maior que 3 o programa envia um aviso e ajusta o valor para o Ìmpar menor mais prÛximo do valor encontrado.
+    //Se o valor de n contido no arquivo vizinhos.txt for um n—ämero par maior que 3 o programa envia um aviso e ajusta o valor para o –Ωmpar menor mais pr—Éximo do valor encontrado.
 	if(n%2==0){
 		al_show_native_message_box(janela, "Valor Invalido", "Valor informado e par.", "O valor sera ajustado para o impar menor mais proximo.", NULL, ALLEGRO_MESSAGEBOX_WARN);
 		n--;
 	}
-	//Calculamos o total de vizinhos que cada pixel ter·, com ele incluso
+	//Calculamos o total de vizinhos que cada pixel ter–±, com ele incluso
 	totalviz = n*n;
-	//Calculamos a posiÁ„o da mediana
+	//Calculamos a posi–∑–≥o da mediana
 	vetmeio=(totalviz-1)/2;
-	//Aloca memÛria para o vetor de pixels
+	//Aloca mem—Éria para o vetor de pixels
 	mediana = (unsigned char *)malloc(totalviz*sizeof(unsigned char));
 	
-	//O valor de r È calculado para encontrar o centro da mascara 
+	//O valor de r –π calculado para encontrar o centro da mascara 
 	r = (n-1)/2;
-	// LaÁo que vai percorrer todos os pixels da imagem
+	// La–∑o que vai percorrer todos os pixels da imagem
 	for (i=0;i<altura;i++){
         for (j=0;j<largura;j++){
              m=0;
             
-            //LaÁo que vai percorrer os vizinhos de cada pixel
+            //La–∑o que vai percorrer os vizinhos de cada pixel
             for (k=i-r;k<=i+r;k++){
                 for (l=j-r;l<=j+r;l++){
-                    //Se o vizinho for um pixel da imagem guardamos o seu nÌvel de cinza no vetor
+                    //Se o vizinho for um pixel da imagem guardamos o seu n–Ωvel de cinza no vetor
                     if (k>=0 && k<altura && l>=0 && l<largura)
                        mediana[m]=data[k][l];
                     else // Se o vizinho estiver fora da imagem, associamos este vizinho como 0 e guardamos no vetor
@@ -970,18 +975,514 @@ unsigned char **filtromediana(ALLEGRO_DISPLAY *janela, unsigned char **data, int
                                 
                 }
             }
-            //Realizamos a ordenaÁ„o do vetor pelo mÈtodo Quicksort e Insertion Sort
+            //Realizamos a ordena–∑–≥o do vetor pelo m–πtodo Quicksort e Insertion Sort
             sort(mediana, inicio, totalviz-1);
 
-            //Cada pixel na nova matriz recebe a mediana do nÌvel de cinza dos seus vizinhos 
+            //Cada pixel na nova matriz recebe a mediana do n–Ωvel de cinza dos seus vizinhos 
             matriz[i][j] = mediana[vetmeio];
 
         }
     }
     free(mediana);
-    //Retorna a matriz completa para o mÈtodo principal
+    //Retorna a matriz completa para o m–πtodo principal
     return matriz;
 }
+
+double **calculagaussi(int r, float sig, int n){
+    double **mascara;
+    int i,j,k=0;
+    
+    //Alocacao da matriz mascara 
+   	mascara =(double **)malloc(n*sizeof(double*));
+	for (i=0; i<n;i++)
+        mascara[i] = (double *) malloc (n*sizeof(double)); 
+        
+        
+    //Aplicacao do calculo do filtro gaussiano para cada pixel da mascara
+    for (i=-r;i<=r;i++){
+        for(j=-r;j<=r;j++){           
+            mascara[i+r][j+r]=(1/(2*M_PI*sig*sig))*exp(-((i*i)+(j*j))/(2*sig*sig));
+        }
+    }
+    return mascara;
+}
+unsigned char **operagaussi(ALLEGRO_DISPLAY *janela, unsigned char **data, int altura, int largura)
+{
+    int i,j,n=0,r,k,l,m,o;
+    float sig;
+    double soma, **mascara;
+    unsigned char **matriz;
+    matriz = alocaMatriz(altura, largura);
+    const char *diretorio = "vizinhos.txt";
+    const char *diretorio2= "sigma.txt";
+    FILE *arquivo;
+
+   	if((arquivo = fopen(diretorio, "r+b"))==NULL) {
+		printf("Arquivo '%s' nao pode ser aberto\n",diretorio);
+		erroMsgBuf = "Arquivo vizinhos.txt nao pode ser encontrado.";
+		desalocaMatriz(matriz, altura);
+		fclose(arquivo);
+		return NULL;
+	}
+
+	if(fscanf(arquivo, "%d", &n) != 1){
+		printf("Texto formatado errado\n");
+		erroMsgBuf = "Arquivo de configuracao invalido.";
+		desalocaMatriz(matriz, altura);
+		fclose(arquivo);
+		return NULL;
+	}
+	fclose(arquivo);
+
+    //Se o valor de n contido no arquivo vizinhos.txt for menor que 3 o programa envia um aviso e ajusta o valor para 3.
+	if(n < 3){
+		al_show_native_message_box(janela, "Valor de Vizinhos Invalido", "Valor informado menor que o permitido.", "O valor foi ajustado para 3.", NULL, ALLEGRO_MESSAGEBOX_WARN);
+		n = 3;
+	}
+    
+    //Se o valor de n contido no arquivo vizinhos.txt for um numero par maior que 3 o programa envia um aviso e ajusta o valor para o impar menor mais proximo do valor encontrado.
+	if(n%2==0){
+		al_show_native_message_box(janela, "Valor de Vizinhos Invalido", "Valor informado e par.", "O valor sera ajustado para o impar menor mais proximo.", NULL, ALLEGRO_MESSAGEBOX_WARN);
+		n--;
+	}
+
+   	if((arquivo = fopen(diretorio2, "r+b"))==NULL) {
+		printf("Arquivo '%s' nao pode ser aberto\n",diretorio2);
+		erroMsgBuf = "Arquivo sigma.txt nao pode ser encontrado.";
+		desalocaMatriz(matriz, altura);
+		fclose(arquivo);
+		return NULL;
+	}
+
+	if(fscanf(arquivo, "%f", &sig) != 1) {
+		printf("Texto formatado errado\n");
+		erroMsgBuf = "Arquivo de configuracao invalido.";
+		desalocaMatriz(matriz, altura);
+		fclose(arquivo);
+		return NULL;
+	}
+	fclose(arquivo);
+	
+	//Se o valor de sig contido no arquivo sigma.txt for um numero menor ou igual a 0, o valor È reajustado para 1.
+	if(sig <= 0){
+		al_show_native_message_box(janela, "Valor de sigma Invalido", "Valor informado deve ser positivo.", "O valor foi ajustado para 1.", NULL, ALLEGRO_MESSAGEBOX_WARN);
+		sig = 1;
+	}
+	
+	//O valor de r e calculado para encontrar o centro da mascara 
+	r = (n-1)/2;
+	
+	//Realizamos a alocaÁ„o da matriz da mascara na memoria
+	mascara =(double **)malloc(n*sizeof(double*));
+	for (i=0; i<n;i++)
+        mascara[i] = (double *) malloc (n*sizeof(double)); 
+
+    //E chamada a funcao que faz o calculo dos pesos da mascara
+	mascara = calculagaussi(r,sig,n);
+
+    //Laco que percorre a imagem pixel a pixel
+    for (i=0; i<altura;i++){
+        for (j=0;j<largura;j++){
+            soma=0;
+            m= -r;
+            
+            //LaÁo que vai percorrer os vizinhos de cada pixel
+            for (k=i-r;k<=i+r;k++){
+                o= -r;
+                
+                for (l=j-r;l<=j+r;l++){
+                    //Se o vizinho for um pixel da imagem multiplica-se o seu nivel de cinza com o peso da mascara naquela posicao, se for um pixel da borda nao soma nada(zero)
+                    if (k>=0 && k<altura && l>=0 && l<largura)
+                       soma+=(data[k][l]*mascara[m+r][o+r]);  
+                    o++;
+                }
+                m++;
+            }
+            //Quando todos o pesos foram somados, arredonda-se o valor para o inteiro mais proximo e guarda na nova matriz
+            matriz[i][j] = (unsigned char)round(soma);
+        }       
+    }
+
+
+    free(mascara);
+	
+	return matriz;
+
+}
+
+double **calculalaplace(int r, float sig, int n){
+    double **mascara, aux;
+    int i,j,k=0;
+    
+    //Alocacao da matriz mascara 
+   	mascara =(double **)malloc(n*sizeof(double*));
+	for (i=0; i<n;i++)
+        mascara[i] = (double *) malloc (n*sizeof(double)); 
+        
+    //Aplicacao do calculo do filtro laplaciano para cada pixel da mascara
+    for (i=-r;i<=r;i++){
+        for(j=-r;j<=r;j++){           
+            aux = ((i*i) + (j*j)) / (2*sig*sig);
+            mascara[i+r][j+r]=-(1/(M_PI*pow(sig,4)))*(1 - aux)*exp(-aux);
+        }
+    }
+    
+    return mascara;
+}
+
+unsigned char **operalaplace(ALLEGRO_DISPLAY *janela, unsigned char **data, int altura, int largura)
+{
+    int i,j,n=0,r,k,l,m,o;
+    float sig;
+    double soma, **mascara;
+    unsigned char **matriz;
+    matriz = alocaMatriz(altura, largura);
+    const char *diretorio = "vizinhos.txt";
+    const char *diretorio2= "sigma.txt";
+    FILE *arquivo;
+
+   	if((arquivo = fopen(diretorio, "r+b"))==NULL) {
+		printf("Arquivo '%s' nao pode ser aberto\n",diretorio);
+		erroMsgBuf = "Arquivo vizinhos.txt nao pode ser encontrado.";
+		desalocaMatriz(matriz, altura);
+		fclose(arquivo);
+		return NULL;
+	}
+
+	if(fscanf(arquivo, "%d", &n) != 1){
+		printf("Texto formatado errado\n");
+		erroMsgBuf = "Arquivo de configuracao invalido.";
+		desalocaMatriz(matriz, altura);
+		fclose(arquivo);
+		return NULL;
+	}
+	fclose(arquivo);
+
+    //Se o valor de n contido no arquivo vizinhos.txt for menor que 3 o programa envia um aviso e ajusta o valor para 3.
+	if(n < 3){
+		al_show_native_message_box(janela, "Valor de Vizinhos Invalido", "Valor informado menor que o permitido.", "O valor foi ajustado para 3.", NULL, ALLEGRO_MESSAGEBOX_WARN);
+		n = 3;
+	}
+    
+    //Se o valor de n contido no arquivo vizinhos.txt for um numero par maior que 3 o programa envia um aviso e ajusta o valor para o impar menor mais proximo do valor encontrado.
+	if(n%2==0){
+		al_show_native_message_box(janela, "Valor de Vizinhos Invalido", "Valor informado e par.", "O valor sera ajustado para o impar menor mais proximo.", NULL, ALLEGRO_MESSAGEBOX_WARN);
+		n--;
+	}
+
+   	if((arquivo = fopen(diretorio2, "r+b"))==NULL) {
+		printf("Arquivo '%s' nao pode ser aberto\n",diretorio2);
+		erroMsgBuf = "Arquivo sigma.txt nao pode ser encontrado.";
+		desalocaMatriz(matriz, altura);
+		fclose(arquivo);
+		return NULL;
+	}
+
+	if(fscanf(arquivo, "%f", &sig) != 1) {
+		printf("Texto formatado errado\n");
+		erroMsgBuf = "Arquivo de configuracao invalido.";
+		desalocaMatriz(matriz, altura);
+		fclose(arquivo);
+		return NULL;
+	}
+	fclose(arquivo);
+	
+	//Se o valor de sig contido no arquivo sigma.txt for um numero menor ou igual a 0, o valor È reajustado para 1.
+	if(sig <= 0){
+		al_show_native_message_box(janela, "Valor de sigma Invalido", "Valor informado deve ser positivo.", "O valor foi ajustado para 1.", NULL, ALLEGRO_MESSAGEBOX_WARN);
+		sig = 1;
+	}
+	
+	//O valor de r e calculado para encontrar o centro da mascara 
+	r = (n-1)/2;
+	
+    //E chamada a funcao que faz o calculo dos pesos da mascara
+	mascara = calculalaplace(r,sig,n);
+
+    //Laco que percorre a imagem pixel a pixel
+    for (i=0; i<altura;i++){
+        for (j=0;j<largura;j++){
+            soma=0;
+            m= -r;
+            
+            //LaÁo que vai percorrer os vizinhos de cada pixel
+            for (k=i-r;k<=i+r;k++){
+                o= -r;
+                
+                for (l=j-r;l<=j+r;l++){
+                    //Se o vizinho for um pixel da imagem multiplica-se o seu nivel de cinza com o peso da mascara naquela posicao, se for um pixel da borda nao soma nada(zero)
+                    if (k>=0 && k<altura && l>=0 && l<largura){
+                       soma+=(data[k][l]*mascara[m+r][o+r]); 
+                    }
+                    o++;
+                }
+                m++;
+            }
+
+            matriz[i][j] = normalizacao(data[i][j] - soma);
+        }       
+    }
+    
+    free(mascara);
+	return matriz;
+}
+
+int **getElementoEst(ALLEGRO_DISPLAY *janela, int n)
+{
+    int **est, i, j, buf;
+    
+    //Alocacao da matriz mascara 
+   	est =(int **)malloc(n*sizeof(int*));
+	for (i=0; i<n;i++)
+        est[i] = (int *) malloc (n*sizeof(int)); 
+  
+    FILE *arquivo;
+    if((arquivo = fopen("k.txt", "r"))==NULL) {
+		printf("Arquivo nao pode ser aberto\n");
+		erroMsgBuf = "Arquivo de elemento estruturante nao pode ser encontrado.";
+		free(est);
+		fclose(arquivo);
+		return NULL;
+	}
+	
+    for(i=0;i<n;i++){
+       for(j=0;j<n;j++)
+       {
+           if(fscanf(arquivo, "%d", &est[i][j]) != 1){
+               printf("erro na leitura do arquivo k.txt\n");
+	           erroMsgBuf = "Arquivo de elemento estruturante invalido.";
+	           free(est);
+	           fclose(arquivo);
+	           return NULL;
+          }
+          if (est[i][j] > 255){
+               al_show_native_message_box(janela, "Valor Invalido", "Valor nao pode ser maior que 255.", "O valor sera ajustado para 255.", NULL, ALLEGRO_MESSAGEBOX_WARN);
+		       est[i][j]=255;
+          }
+                                  
+       }
+                     
+    }
+   	fclose(arquivo);  
+    return est;
+}
+
+unsigned char **erosao(ALLEGRO_DISPLAY *janela, unsigned char **data, int altura, int largura)
+{
+    int i, j, l, k, n=0, r, menor, m, o;
+    unsigned char **matriz;
+    int **est;
+    matriz = alocaMatriz(altura, largura);
+    const char *diretorio = "vizinhos.txt";
+    FILE *arquivo;
+    
+
+   	if((arquivo = fopen(diretorio, "r+b"))==NULL) {
+		printf("Arquivo '%s' nao pode ser aberto\n",diretorio);
+		erroMsgBuf = "Arquivo vizinhos.txt nao pode ser encontrado.";
+		desalocaMatriz(matriz, altura);
+		fclose(arquivo);
+		return NULL;
+	}
+
+	if(fscanf(arquivo, "%d", &n) != 1){
+		printf("Texto formatado errado\n");
+		erroMsgBuf = "Arquivo de configuracao invalido.";
+		desalocaMatriz(matriz, altura);
+		fclose(arquivo);
+		return NULL;
+	}
+	fclose(arquivo);
+
+    //Se o valor de n contido no arquivo vizinhos.txt for menor que 3 o programa envia um aviso e ajusta o valor para 3.
+	if(n < 3){
+		al_show_native_message_box(janela, "Valor Invalido", "Valor informado menor que o permitido.", "O valor foi ajustado para 3.", NULL, ALLEGRO_MESSAGEBOX_WARN);
+		n = 3;
+	}
+    
+    //Se o valor de n contido no arquivo vizinhos.txt for um numero par maior que 3 o programa envia um aviso e ajusta o valor para o impar menor mais proximo do valor encontrado.
+	if(n%2==0){
+		al_show_native_message_box(janela, "Valor Invalido", "Valor informado e par.", "O valor sera ajustado para o impar menor mais proximo.", NULL, ALLEGRO_MESSAGEBOX_WARN);
+		n--;
+	}
+	
+	est = getElementoEst(janela,n);//pega elemento estruturante
+	if(est==NULL)
+    {
+         return NULL;
+    }
+	
+	//O valor de r e calculado para encontrar o centro da mascara 
+	r =(n-1)/2;
+	
+	// Laco que vai percorrer todos os pixels da imagem
+	for (i=0;i<altura;i++){
+        for (j=0;j<largura;j++){
+            m=-r;
+            menor=256;
+            
+            //Laco que vai percorrer os vizinhos de cada pixel
+            for (k=i-r;k<=i+r;k++){
+                o=-r;
+                for (l=j-r;l<=j+r;l++){
+                    
+                    if (k>=0 && k<altura && l>=0 && l<largura){
+                       if (est[m+r][o+r] >= 0){
+                               if ((data[k][l] - est[m+r][o+r]) < menor)
+                                  menor = data[k][l] - est[m+r][o+r];
+                       }
+                       
+                       else
+                           if(255 < menor)
+                                menor=255;
+                    }
+                    else
+                        if (-est[m+r][o+r] < menor)
+                           menor = -est[m+r][o+r];  
+                                     
+                    o++;
+                }
+                m++;
+            }
+            
+            matriz[i][j] = normalizacao(menor);
+
+        }
+    }
+    //Retorna a matriz completa para o m–πtodo principal
+    return matriz;
+}
+
+void reflexo(int **est, int n)
+{
+     int i, j, aux;
+     
+     printf("Obj Est:\n");
+     for(i=0; i<n; i++)
+     {
+         for(j=0; j<n; j++)
+         {
+             printf("%d ", est[i][j]);
+         }
+         printf("\n");
+     }
+      
+     for(i=0; i<(n/2)+1; i++)
+     {
+         for(j=0; j<n; j++)
+         {
+             if(i==(n/2) && j==(n/2))
+                 break;
+                 
+             aux = est[i][j]; 
+             est[i][j] = est[n-i-1][n-j-1];
+             est[n-i-1][n-j-1] = aux;
+         }  
+     }
+             
+     printf("Refletido:\n");
+     for(i=0; i<n; i++)
+     {
+         for(j=0; j<n; j++)
+         {
+             printf("%d ", est[i][j]);
+         }
+         printf("\n");
+     }
+   
+}
+
+unsigned char **dilatacao(ALLEGRO_DISPLAY *janela, unsigned char **data, int altura, int largura)
+{
+    int i, j, l, k, n=0, r, maior, m, o;
+    unsigned char **matriz;
+    int **est;
+    matriz = alocaMatriz(altura, largura);
+    const char *diretorio = "vizinhos.txt";
+    FILE *arquivo;
+    
+
+   	if((arquivo = fopen(diretorio, "r+b"))==NULL) {
+		printf("Arquivo '%s' nao pode ser aberto\n",diretorio);
+		erroMsgBuf = "Arquivo vizinhos.txt nao pode ser encontrado.";
+		desalocaMatriz(matriz, altura);
+		fclose(arquivo);
+		return NULL;
+	}
+
+	if(fscanf(arquivo, "%d", &n) != 1){
+		printf("Texto formatado errado\n");
+		erroMsgBuf = "Arquivo de configuracao invalido.";
+		desalocaMatriz(matriz, altura);
+		fclose(arquivo);
+		return NULL;
+	}
+	fclose(arquivo);
+
+    //Se o valor de n contido no arquivo vizinhos.txt for menor que 3 o programa envia um aviso e ajusta o valor para 3.
+	if(n < 3){
+		al_show_native_message_box(janela, "Valor Invalido", "Valor informado menor que o permitido.", "O valor foi ajustado para 3.", NULL, ALLEGRO_MESSAGEBOX_WARN);
+		n = 3;
+	}
+    
+    //Se o valor de n contido no arquivo vizinhos.txt for um numero par maior que 3 o programa envia um aviso e ajusta o valor para o impar menor mais proximo do valor encontrado.
+	if(n%2==0){
+		al_show_native_message_box(janela, "Valor Invalido", "Valor informado e par.", "O valor sera ajustado para o impar menor mais proximo.", NULL, ALLEGRO_MESSAGEBOX_WARN);
+		n--;
+	}
+	
+	est = getElementoEst(janela,n);//pega elemento estruturante
+	
+    if(est==NULL)
+    {
+         return NULL;
+    }
+    
+    reflexo(est, n);//reflete o elemento estruturante
+	
+	//O valor de r e calculado para encontrar o centro da mascara 
+	r =(n-1)/2;
+	
+	// Laco que vai percorrer todos os pixels da imagem
+	for (i=0;i<altura;i++){
+        for (j=0;j<largura;j++){
+            m=-r;
+            maior=0;
+            
+            //Laco que vai percorrer os vizinhos de cada pixel
+            for (k=i-r;k<=i+r;k++){
+                o=-r;
+                for (l=j-r;l<=j+r;l++){
+                    
+                    if (k>=0 && k<altura && l>=0 && l<largura){
+                       if (est[m+r][o+r] >= 0){
+                               if ((data[k][l] + est[m+r][o+r]) > maior)
+                                  maior = data[k][l] + est[m+r][o+r];
+                       }
+                       
+                       else
+                           if(0 > maior)
+                                maior=0;
+                    }
+                    else
+                        if (est[m+r][o+r] > maior)
+                           maior = est[m+r][o+r];  
+                                     
+                    o++;
+                }
+                m++;
+            }
+            
+            matriz[i][j] = normalizacao(maior);
+
+        }
+    }
+    //Retorna a matriz completa para o m–πtodo principal
+    return matriz;
+}
+
+
+
 
 /*metodo principal, gerencia a janela*/
 int main(int argc, char argv[]) {
@@ -1129,6 +1630,10 @@ int main(int argc, char argv[]) {
 								botoes[8].ativo=false;
 								botoes[9].ativo=false;
 								botoes[10].ativo=false;
+								botoes[11].ativo=false;
+								botoes[12].ativo=false;
+								botoes[13].ativo=false;
+								botoes[14].ativo=false;
 
 								/*limpa a tela*/
 								al_clear_to_color(al_map_rgb(corFundo, corFundo, corFundo));
@@ -1155,7 +1660,10 @@ int main(int argc, char argv[]) {
 							botoes[8].ativo=true;
 							botoes[9].ativo=true;
 							botoes[10].ativo=true;
-                            
+							botoes[11].ativo=true;
+                            botoes[12].ativo=true;
+                            botoes[13].ativo=true;
+                            botoes[14].ativo=true;
                             
                             calculaFileira(head->largura);
 							defBotaoPos(botoes);
@@ -1406,6 +1914,115 @@ int main(int argc, char argv[]) {
                          printf("Botao inativo\n");
                     }
 				break;
+				
+                case 11:
+					if(botoes[11].ativo==true){
+						InserirNodo(head->data, head->largura, head->altura);
+                        head->data = operagaussi(janela, head->prox->data, head->prox->altura, head->prox->largura);
+                        if(head->data==NULL){
+							al_show_native_message_box(janela, "Erro", "Erro ao carregar arquivo de qtde de vizinhos", erroMsgBuf, NULL, ALLEGRO_MESSAGEBOX_ERROR);
+							head = head->prox;
+							free(head->ante);
+							head->ante=NULL;
+							desenhaMenu(janela, botoes);
+					     	al_flip_display();
+                            break;
+						}
+						undo++;
+                        redo=0;
+						botoes[1].ativo=true;
+                        botoes[4].ativo=true;
+						botoes[5].ativo = false;
+                        desenha(janela, head->data, head->altura, head->largura, (bL - head->largura)/2, bA);
+                        desenhaMenu(janela, botoes);
+						al_flip_display();
+					}
+					else {
+                         printf("Botao inativo\n");
+                    }
+				break;
+
+                case 12:
+					if(botoes[12].ativo==true){
+						InserirNodo(head->data, head->largura, head->altura);
+                        head->data = operalaplace(janela, head->prox->data, head->prox->altura, head->prox->largura);
+                        if(head->data==NULL){
+							al_show_native_message_box(janela, "Erro", "Erro ao carregar arquivo de qtde de vizinhos", erroMsgBuf, NULL, ALLEGRO_MESSAGEBOX_ERROR);
+							head = head->prox;
+							free(head->ante);
+							head->ante=NULL;
+							desenhaMenu(janela, botoes);
+					     	al_flip_display();
+                            break;
+						}
+						undo++;
+                        redo=0;
+						botoes[1].ativo=true;
+                        botoes[4].ativo=true;
+						botoes[5].ativo = false;
+                        desenha(janela, head->data, head->altura, head->largura, (bL - head->largura)/2, bA);
+                        desenhaMenu(janela, botoes);
+						al_flip_display();
+					}
+					else {
+                         printf("Botao inativo\n");
+                    }
+				break;
+				
+                case 13:
+					if(botoes[13].ativo==true){
+						InserirNodo(head->data, head->largura, head->altura);
+                        head->data = erosao(janela, head->prox->data, head->prox->altura, head->prox->largura);
+                        if(head->data==NULL){
+							al_show_native_message_box(janela, "Erro", "Erro ao aplicar a EROSAO", erroMsgBuf, NULL, ALLEGRO_MESSAGEBOX_ERROR);
+							head = head->prox;
+							free(head->ante);
+							head->ante=NULL;
+							desenhaMenu(janela, botoes);
+					     	al_flip_display();
+                            break;
+						}
+						undo++;
+                        redo=0;
+						botoes[1].ativo=true;
+                        botoes[4].ativo=true;
+						botoes[5].ativo = false;
+                        desenha(janela, head->data, head->altura, head->largura, (bL - head->largura)/2, bA);
+                        desenhaMenu(janela, botoes);
+						al_flip_display();
+					}
+					else {
+                         printf("Botao inativo\n");
+                    }
+				break;
+				
+				case 14:
+					if(botoes[14].ativo==true){
+						InserirNodo(head->data, head->largura, head->altura);
+                        head->data = dilatacao(janela, head->prox->data, head->prox->altura, head->prox->largura);
+                        if(head->data==NULL){
+							al_show_native_message_box(janela, "Erro", "Erro ao aplicar a Dilatacao", erroMsgBuf, NULL, ALLEGRO_MESSAGEBOX_ERROR);
+							head = head->prox;
+							free(head->ante);
+							head->ante=NULL;
+							desenhaMenu(janela, botoes);
+					     	al_flip_display();
+                            break;
+						}
+						undo++;
+                        redo=0;
+						botoes[1].ativo=true;
+                        botoes[4].ativo=true;
+						botoes[5].ativo = false;
+                        desenha(janela, head->data, head->altura, head->largura, (bL - head->largura)/2, bA);
+                        desenhaMenu(janela, botoes);
+						al_flip_display();
+					}
+					else {
+                         printf("Botao inativo\n");
+                    }
+				break;
+
 
 				default:
 				break;
