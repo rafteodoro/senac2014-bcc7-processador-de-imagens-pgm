@@ -8,7 +8,7 @@
 #include <allegro5/allegro_primitives.h>
 #include "allegro5/allegro_image.h"
 
-#define QTD_BT 15//quantidade de botoes
+#define QTD_BT 16//quantidade de botoes
 #define QTD_VERSOES 1//quantidade de versoes suportadas
 #define QTD_INTERVALO 255//quantidade maxima de intervalos
 
@@ -139,7 +139,7 @@ int getCabecalho(FILE *arquivo, int *maxCor, char *tipo, Nodo *no) {
 		return -1;
 	}
 
-	/*Verifica versгo da imagem*/
+	/*Verifica versÐ³o da imagem*/
 	buf = getc(arquivo);
 	for(i=0; i< QTD_VERSOES; i++) {
 		if(buf==VERSOES[i])
@@ -493,6 +493,7 @@ int criaMenu(Botao b[]) {
 	b[12].img = carregaBitmapBT("operalaplace.png");
 	b[13].img = carregaBitmapBT("erosao.png");
 	b[14].img = carregaBitmapBT("dilatacao.png");
+	b[15].img = carregaBitmapBT("dilatacao.png");
 
 	for(i=0; i<QTD_BT;i++) {
 		if(b[i].img==NULL)/*verifica se todos os botoes foram carregados com sucesso*/
@@ -650,11 +651,11 @@ int arredondamento (double x){
     double ant=x;
     x -= (int)x; //Retira a parte inteira do valor de x
     
-    //Se x for maior que 0.5 a funзгo retornarб o menor valor inteiro depois de ant
+    //Se x for maior que 0.5 a funÐ·Ð³o retornarÐ± o menor valor inteiro depois de ant
     if (x > .5)
        return (int)ceil(ant); 
     else
-       return (int)floor(ant); //Se x for igual ou menor que 0.5 a funзгo retornarб o maior valor inteiro antes de ant;
+       return (int)floor(ant); //Se x for igual ou menor que 0.5 a funÐ·Ð³o retornarÐ± o maior valor inteiro antes de ant;
 } 
 
 unsigned char **dithering(unsigned char **data, int altura, int largura, int maxCor){
@@ -813,34 +814,34 @@ unsigned char **filtromedia(ALLEGRO_DISPLAY *janela, unsigned char **data, int a
 		n = 3;
 	}
     
-    //Se o valor de n contido no arquivo vizinhos.txt for um nъmero par maior que 3 o programa envia um aviso e ajusta o valor para o нmpar menor mais prуximo do valor encontrado.
+    //Se o valor de n contido no arquivo vizinhos.txt for um nÑŠmero par maior que 3 o programa envia um aviso e ajusta o valor para o Ð½mpar menor mais prÑƒximo do valor encontrado.
 	if(n%2==0){
 		al_show_native_message_box(janela, "Valor Invalido", "Valor informado e par.", "O valor sera ajustado para o impar menor mais proximo.", NULL, ALLEGRO_MESSAGEBOX_WARN);
 		n--;
 	}
 	
-	//O valor de r й calculado para encontrar o centro da mascara 
+	//O valor de r Ð¹ calculado para encontrar o centro da mascara 
 	r = (n-1)/2;
 	
-	// Laзo que vai percorrer todos os pixels da imagem
+	// LaÐ·o que vai percorrer todos os pixels da imagem
 	for (i=0;i<altura;i++){
         for (j=0;j<largura;j++){
             soma=0; 
             
-            //Laзo que vai percorrer os vizinhos de cada pixel
+            //LaÐ·o que vai percorrer os vizinhos de cada pixel
             for (k=i-r;k<=i+r;k++){
                 for (l=j-r;l<=j+r;l++){
-                    //Se o vizinho for um pixel da imagem soma-se o seu nнvel de cinza, se for um pixel da borda nгo soma nada (zero)
+                    //Se o vizinho for um pixel da imagem soma-se o seu nÐ½vel de cinza, se for um pixel da borda nÐ³o soma nada (zero)
                     if (k>=0 && k<altura && l>=0 && l<largura)
                        soma+=data[k][l];         
                 }
             }
-            //A nova matriz recebe o acumulado do nнvel de cinza dos vizinhos e divide pelo valor de n ao quadrado, que й o numero total de vizinhos (incluindo o pixel atual). Assim, calculando a mйdia, que serб arredondada.
+            //A nova matriz recebe o acumulado do nÐ½vel de cinza dos vizinhos e divide pelo valor de n ao quadrado, que Ð¹ o numero total de vizinhos (incluindo o pixel atual). Assim, calculando a mÐ¹dia, que serÐ± arredondada.
             matriz[i][j] = arredondamento(soma/pow((double)n,2));
 
         }
     }
-    //Retorna a matriz completa para o mйtodo principal
+    //Retorna a matriz completa para o mÐ¹todo principal
     return matriz;
 }
 
@@ -852,7 +853,7 @@ void insertionsort (unsigned char *vetor, int inicio, int totalviz)
         // A variavel aux recebe o valor contido no indice i e o comparamos com os outros elementos do vetor que ja estao ordenados, ou seja, a esquerda do mesmo
         aux = vetor[i];
         j = i-1;
-        //Quando aux й menor que o vetor[j], valor[j] й movido uma posicao para a direita ate o valor de aux ser maior que o valor contido em vetor[j] ou chegarmos ao fim do vetor (j<0)  
+        //Quando aux Ð¹ menor que o vetor[j], valor[j] Ð¹ movido uma posicao para a direita ate o valor de aux ser maior que o valor contido em vetor[j] ou chegarmos ao fim do vetor (j<0)  
         while ((j>=0) && (aux < vetor[j])){
               vetor[j+1]= vetor[j];
               j--;
@@ -863,24 +864,24 @@ void insertionsort (unsigned char *vetor, int inicio, int totalviz)
 }
 
 int particao (unsigned char *vetor, int inicio, int totalviz){
-    //Iniciamos no Inicio +1 porque o Inicio[0] serб o pivo
+    //Iniciamos no Inicio +1 porque o Inicio[0] serÐ± o pivo
     int esq = inicio+1;
     int dir = totalviz;
     int aux;
     unsigned char pivo = vetor[inicio];
     while (esq <= dir)
     {
-          //Se o valor a esquerda do vetor й menor ou igual ao pivo, o indice vai para o proximo valor a direita +1
+          //Se o valor a esquerda do vetor Ð¹ menor ou igual ao pivo, o indice vai para o proximo valor a direita +1
           if (vetor[esq] <= pivo){
              esq++;
              continue;
           }
-          //Se o valor a direita do vetor й maior que o pivo, o indice vai para o proximo valor a esquerda -1
+          //Se o valor a direita do vetor Ð¹ maior que o pivo, o indice vai para o proximo valor a esquerda -1
           if (vetor[dir] > pivo){
              dir--;
              continue;
           }
-          //Se o valor a esquerda й maior e o da direita й menor que o pivo, trocamos os dois de lado e os dois indices andam +1 e -1 respectivamente
+          //Se o valor a esquerda Ð¹ maior e o da direita Ð¹ menor que o pivo, trocamos os dois de lado e os dois indices andam +1 e -1 respectivamente
           aux = vetor[esq];
           vetor[esq] = vetor[dir];
           vetor[dir] = aux;
@@ -894,7 +895,7 @@ int particao (unsigned char *vetor, int inicio, int totalviz){
 }
           
           
-//Funзгo que faz a escolha pelo metodo quicksort ou insertion sort
+//FunÐ·Ð³o que faz a escolha pelo metodo quicksort ou insertion sort
 void sort (unsigned char *vetor, int inicio, int totalviz){
      int divide;
      if (inicio < totalviz)
@@ -903,7 +904,7 @@ void sort (unsigned char *vetor, int inicio, int totalviz){
           if ((totalviz - inicio) <= 0)
              insertionsort(vetor, inicio, totalviz);
           else{
-               //Inicia-se o mйtodo quicksort onde a funcao particao pega um numero como pivo e organiza os valores maiores e menores que ele no vetor
+               //Inicia-se o mÐ¹todo quicksort onde a funcao particao pega um numero como pivo e organiza os valores maiores e menores que ele no vetor
                divide = particao(vetor, inicio, totalviz);
                //Chamamos esta funcao recursivamente para reorganizar os subgrupos divididos entre o pivo ate que cada subgrupo contenha um elemento
                sort(vetor, inicio, divide - 1);
@@ -944,29 +945,29 @@ unsigned char **filtromediana(ALLEGRO_DISPLAY *janela, unsigned char **data, int
 		n = 3;
 	}
     
-    //Se o valor de n contido no arquivo vizinhos.txt for um nъmero par maior que 3 o programa envia um aviso e ajusta o valor para o нmpar menor mais prуximo do valor encontrado.
+    //Se o valor de n contido no arquivo vizinhos.txt for um nÑŠmero par maior que 3 o programa envia um aviso e ajusta o valor para o Ð½mpar menor mais prÑƒximo do valor encontrado.
 	if(n%2==0){
 		al_show_native_message_box(janela, "Valor Invalido", "Valor informado e par.", "O valor sera ajustado para o impar menor mais proximo.", NULL, ALLEGRO_MESSAGEBOX_WARN);
 		n--;
 	}
-	//Calculamos o total de vizinhos que cada pixel terб, com ele incluso
+	//Calculamos o total de vizinhos que cada pixel terÐ±, com ele incluso
 	totalviz = n*n;
-	//Calculamos a posiзгo da mediana
+	//Calculamos a posiÐ·Ð³o da mediana
 	vetmeio=(totalviz-1)/2;
-	//Aloca memуria para o vetor de pixels
+	//Aloca memÑƒria para o vetor de pixels
 	mediana = (unsigned char *)malloc(totalviz*sizeof(unsigned char));
 	
-	//O valor de r й calculado para encontrar o centro da mascara 
+	//O valor de r Ð¹ calculado para encontrar o centro da mascara 
 	r = (n-1)/2;
-	// Laзo que vai percorrer todos os pixels da imagem
+	// LaÐ·o que vai percorrer todos os pixels da imagem
 	for (i=0;i<altura;i++){
         for (j=0;j<largura;j++){
              m=0;
             
-            //Laзo que vai percorrer os vizinhos de cada pixel
+            //LaÐ·o que vai percorrer os vizinhos de cada pixel
             for (k=i-r;k<=i+r;k++){
                 for (l=j-r;l<=j+r;l++){
-                    //Se o vizinho for um pixel da imagem guardamos o seu nнvel de cinza no vetor
+                    //Se o vizinho for um pixel da imagem guardamos o seu nÐ½vel de cinza no vetor
                     if (k>=0 && k<altura && l>=0 && l<largura)
                        mediana[m]=data[k][l];
                     else // Se o vizinho estiver fora da imagem, associamos este vizinho como 0 e guardamos no vetor
@@ -975,16 +976,16 @@ unsigned char **filtromediana(ALLEGRO_DISPLAY *janela, unsigned char **data, int
                                 
                 }
             }
-            //Realizamos a ordenaзгo do vetor pelo mйtodo Quicksort e Insertion Sort
+            //Realizamos a ordenaÐ·Ð³o do vetor pelo mÐ¹todo Quicksort e Insertion Sort
             sort(mediana, inicio, totalviz-1);
 
-            //Cada pixel na nova matriz recebe a mediana do nнvel de cinza dos seus vizinhos 
+            //Cada pixel na nova matriz recebe a mediana do nÐ½vel de cinza dos seus vizinhos 
             matriz[i][j] = mediana[vetmeio];
 
         }
     }
     free(mediana);
-    //Retorna a matriz completa para o mйtodo principal
+    //Retorna a matriz completa para o mÐ¹todo principal
     return matriz;
 }
 
@@ -1063,7 +1064,7 @@ unsigned char **operagaussi(ALLEGRO_DISPLAY *janela, unsigned char **data, int a
 	}
 	fclose(arquivo);
 	
-	//Se o valor de sig contido no arquivo sigma.txt for um numero menor ou igual a 0, o valor � reajustado para 1.
+	//Se o valor de sig contido no arquivo sigma.txt for um numero menor ou igual a 0, o valor é reajustado para 1.
 	if(sig <= 0){
 		al_show_native_message_box(janela, "Valor de sigma Invalido", "Valor informado deve ser positivo.", "O valor foi ajustado para 1.", NULL, ALLEGRO_MESSAGEBOX_WARN);
 		sig = 1;
@@ -1072,7 +1073,7 @@ unsigned char **operagaussi(ALLEGRO_DISPLAY *janela, unsigned char **data, int a
 	//O valor de r e calculado para encontrar o centro da mascara 
 	r = (n-1)/2;
 	
-	//Realizamos a aloca��o da matriz da mascara na memoria
+	//Realizamos a alocação da matriz da mascara na memoria
 	mascara =(double **)malloc(n*sizeof(double*));
 	for (i=0; i<n;i++)
         mascara[i] = (double *) malloc (n*sizeof(double)); 
@@ -1086,7 +1087,7 @@ unsigned char **operagaussi(ALLEGRO_DISPLAY *janela, unsigned char **data, int a
             soma=0;
             m= -r;
             
-            //La�o que vai percorrer os vizinhos de cada pixel
+            //Laço que vai percorrer os vizinhos de cada pixel
             for (k=i-r;k<=i+r;k++){
                 o= -r;
                 
@@ -1187,7 +1188,7 @@ unsigned char **operalaplace(ALLEGRO_DISPLAY *janela, unsigned char **data, int 
 	}
 	fclose(arquivo);
 	
-	//Se o valor de sig contido no arquivo sigma.txt for um numero menor ou igual a 0, o valor � reajustado para 1.
+	//Se o valor de sig contido no arquivo sigma.txt for um numero menor ou igual a 0, o valor é reajustado para 1.
 	if(sig <= 0){
 		al_show_native_message_box(janela, "Valor de sigma Invalido", "Valor informado deve ser positivo.", "O valor foi ajustado para 1.", NULL, ALLEGRO_MESSAGEBOX_WARN);
 		sig = 1;
@@ -1205,7 +1206,7 @@ unsigned char **operalaplace(ALLEGRO_DISPLAY *janela, unsigned char **data, int 
             soma=0;
             m= -r;
             
-            //La�o que vai percorrer os vizinhos de cada pixel
+            //Laço que vai percorrer os vizinhos de cada pixel
             for (k=i-r;k<=i+r;k++){
                 o= -r;
                 
@@ -1349,7 +1350,7 @@ unsigned char **erosao(ALLEGRO_DISPLAY *janela, unsigned char **data, int altura
 
         }
     }
-    //Retorna a matriz completa para o mйtodo principal
+    //Retorna a matriz completa para o mÐ¹todo principal
     return matriz;
 }
 
@@ -1477,12 +1478,45 @@ unsigned char **dilatacao(ALLEGRO_DISPLAY *janela, unsigned char **data, int alt
 
         }
     }
-    //Retorna a matriz completa para o mйtodo principal
+    //Retorna a matriz completa para o mÐ¹todo principal
     return matriz;
 }
 
+unsigned char **fourier(ALLEGRO_DISPLAY *janela, unsigned char **data, int altura, int largura){
+    unsigned char **M1, **T;    
+    M1 = alocaMatriz(altura, largura);
+    T = alocaMatriz(altura, largura);
+    int x=0, y=0, soma=0, I=0/*"é a mascara?"*/, j=0;
+    
+    //TRANSFORMADA DISCRETA DE FOURIER LINHA
+	// Laco que vai percorrer todos os pixels da imagem
+	for (y=0;y<altura;y++){
+        for (j=0;j<largura;j++){
+            for(x=0; x<largura; x++){
+                soma += data[y][x]*(1/(pow(M_E,((I*2*M_PI*y*x)/largura))));            
+            }
+            printf("Soma = %d", soma);
+            M1[y][j] = soma;
+            soma=0;
+        }
+    }
 
-
+    //TRANSFORMADA DISCRETA DE FOURIER COLUNA
+	// Laco que vai percorrer todos os pixels da imagem
+	for (y=0;y<largura;y++){
+        for (j=0;j<altura;j++){
+            for(x=0; x<altura; x++){
+                soma += data[x][y]*(1/(pow(M_E,((I*2*M_PI*y*x)/largura))));            
+            }
+            printf("Soma = %d", soma);
+            T[j][y] = soma;
+            soma=0;
+        }
+    }
+    
+    
+    return T;
+}
 
 /*metodo principal, gerencia a janela*/
 int main(int argc, char argv[]) {
@@ -1634,7 +1668,7 @@ int main(int argc, char argv[]) {
 								botoes[12].ativo=false;
 								botoes[13].ativo=false;
 								botoes[14].ativo=false;
-
+                                botoes[15].ativo=false;
 								/*limpa a tela*/
 								al_clear_to_color(al_map_rgb(corFundo, corFundo, corFundo));
 
@@ -1664,6 +1698,7 @@ int main(int argc, char argv[]) {
                             botoes[12].ativo=true;
                             botoes[13].ativo=true;
                             botoes[14].ativo=true;
+                            botoes[15].ativo=true;
                             
                             calculaFileira(head->largura);
 							defBotaoPos(botoes);
@@ -2022,7 +2057,32 @@ int main(int argc, char argv[]) {
                          printf("Botao inativo\n");
                     }
 				break;
-
+			case 15:
+					if(botoes[15].ativo==true){
+						InserirNodo(head->data, head->largura, head->altura);
+                        head->data = fourier(janela, head->prox->data, head->prox->altura, head->prox->largura);
+                        if(head->data==NULL){
+							al_show_native_message_box(janela, "Erro", "Erro ao aplicar o Furier", erroMsgBuf, NULL, ALLEGRO_MESSAGEBOX_ERROR);
+							head = head->prox;
+							free(head->ante);
+							head->ante=NULL;
+							desenhaMenu(janela, botoes);
+					     	al_flip_display();
+                            break;
+						}
+						undo++;
+                        redo=0;
+						botoes[1].ativo=true;
+                        botoes[4].ativo=true;
+						botoes[5].ativo = false;
+                        desenha(janela, head->data, head->altura, head->largura, (bL - head->largura)/2, bA);
+                        desenhaMenu(janela, botoes);
+						al_flip_display();
+					}
+					else {
+                         printf("Botao inativo\n");
+                    }
+				break;
 
 				default:
 				break;
@@ -2045,4 +2105,3 @@ int main(int argc, char argv[]) {
 	al_destroy_display(janela);
     return 0;
 }
-
