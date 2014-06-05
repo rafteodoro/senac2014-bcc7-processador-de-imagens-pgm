@@ -1482,42 +1482,175 @@ unsigned char **dilatacao(ALLEGRO_DISPLAY *janela, unsigned char **data, int alt
     return matriz;
 }
 
+//unsigned char **fourier(ALLEGRO_DISPLAY *janela, unsigned char **data, int altura, int largura){
+//    unsigned char **M1, **T, **E, **V;    
+//    M1 = alocaMatriz(altura, largura);
+//    T = alocaMatriz(altura, largura);
+//    E = alocaMatriz(altura, largura);
+//    V = alocaMatriz(altura, largura);
+//    int x=0, y=0, soma=0, I=1, j=0, m=0;
+//double cosX=0, senX=0;
+//double somaReal = 0.0;
+//double somaImag = 0.0;
+//
+//    //TRANSFORMADA DISCRETA DE FOURIER LINHA
+//	// Laco que vai percorrer todos os pixels da imagem
+//	for (y=0;y<altura;y++){
+//        for (j=0;j<largura;j++){
+//            for(x=0; x<largura; x++){
+//                cosX = cos(((-2.0 * M_PI)*(x * j)) / largura);
+//                senX = sin(((-2.0 * M_PI)*(x * j)) / largura);
+////                soma += data[y][x]*(1/(pow(M_E,((I*2*M_PI*j*x)/largura))));            
+//                somaReal =somaReal + (matrizPrincipal[i][j] * cosX) - (0.0 * senX);
+//                somaImag =somaImag + (0.0 * cosX)+(matrizPrincipal[i][j] * senX) ;
+//
+//            }
+//            M1[y][j] = somaReal;
+//            T[y][j] = somaImag
+//            soma=0;
+//        }
+//    }
+//	for (y=0;y<altura;y++){
+//        for (j=0;j<largura;j++){
+//            printf("%u ", M1[y][j]);
+//        }
+//        printf("\n");
+//    }
+//    //TRANSFORMADA DISCRETA DE FOURIER COLUNA
+//	// Laco que vai percorrer todos os pixels da imagem
+//	for (y=0;y<largura;y++){
+//        for (j=0;j<altura;j++){
+//            for(x=0; x<altura; x++){
+//                cosX = cos(((-2.0 * M_PI)*(x * j)) / largura);
+//                senX = sin(((-2.0 * M_PI)*(x * j)) / largura);
+//                somaReal =somaReal + (matrizPrincipal[i][j] * cosX) - (0.0 * senX);
+//                somaImag =somaImag + (0.0 * cosX)+(matrizPrincipal[i][j] * senX) ;
+//                soma += data[x][y]*(1/(pow(M_E,((I*2*M_PI*j*x)/largura))));            
+//            }
+//            T[j][y] = soma;
+//            soma=0;
+//        }
+//    }
+//	for (y=0;y<altura;y++){
+//        for (j=0;j<largura;j++){
+//            printf("%u ", T[y][j]);
+//        }
+//        printf("\n");
+//    }
+//
+//    //ESPECTRO DE MAGNITUDE
+//    for (y=0;y<altura;y++){
+//        for (x=0;x<largura;x++){
+//            E[y][x] = log(1+T[y][x]);
+//            if(m<E[y][x]){
+//                m = E[y][x];
+//            }
+//        }
+//    }
+//	for (y=0;y<altura;y++){
+//        for (j=0;j<largura;j++){
+//            printf("%u ", E[y][j]);
+//        }
+//        printf("\n");
+//    }
+//    //VISUALIZAÇÃO DO ESPECTRO
+//    for (y=0;y<altura;y++){
+//        for (x=0;x<largura;x++){
+//            V[y][x] = (E[y][x]/m)*255;
+//        }
+//    }
+//    return V;
+//}
+typedef struct _Complexo {
+    float real;
+    float imag;
+} NComp;
+
+
+float **matrizEspectro;
+NComp **matrizL;
+NComp **matrizC;
+double pi = 3.141592;
+double auxMaxEspectro=0.0;
+double maxEspectro=0.0;
 unsigned char **fourier(ALLEGRO_DISPLAY *janela, unsigned char **data, int altura, int largura){
-    unsigned char **M1, **T;    
+    unsigned char **M1, **T, **E, **V;    
+    int i=0;
     M1 = alocaMatriz(altura, largura);
-    T = alocaMatriz(altura, largura);
-    int x=0, y=0, soma=0, I=0/*"é a mascara?"*/, j=0;
-    
-    //TRANSFORMADA DISCRETA DE FOURIER LINHA
-	// Laco que vai percorrer todos os pixels da imagem
-	for (y=0;y<altura;y++){
-        for (j=0;j<largura;j++){
-            for(x=0; x<largura; x++){
-                soma += data[y][x]*(1/(pow(M_E,((I*2*M_PI*y*x)/largura))));            
+	matrizEspectro = (float **) malloc (sizeof(float *) * altura);
+	for(i=0; i<altura; i++) {
+		matrizEspectro[i] = (float *) malloc (sizeof(float) * largura);
+	}
+	matrizL = (NComp **) malloc (sizeof(NComp *) * altura);
+	for(i=0; i<altura; i++) {
+		matrizL[i] = (NComp *) malloc (sizeof(NComp) * largura);
+	}
+	matrizC = (NComp **) malloc (sizeof(NComp *) * altura);
+	for(i=0; i<altura; i++) {
+		matrizC[i] = (NComp *) malloc (sizeof(NComp) * largura);
+	}
+    int  j = 0 , k = 0, y, x;
+    double calc=0.0;
+    double cosX = 0.0;
+    double senX = 0.0;
+    double espectro = 0.0;
+    double somaReal = 0.0;
+    double somaImag = 0.0;
+    for (i = 0; i < altura; i++){
+        for (k = 0; k < largura; k++){
+            for (j = 0; j < largura; j++){
+                cosX = cos(((-2.0 * pi)*(k * j)) / largura);
+                senX = sin(((-2.0 * pi)*(k * j)) / largura);
+                somaReal =somaReal + (data[i][j] * cosX) - (0.0 * senX);
+                somaImag =somaImag + (0.0 * cosX)+(data[i][j] * senX) ;
             }
-            printf("Soma = %d", soma);
-            M1[y][j] = soma;
-            soma=0;
+            matrizL[i][k].real = somaReal;
+            matrizL[i][k].imag = somaImag;
+            somaReal = 0.0;
+            somaImag = 0.0;
         }
     }
 
-    //TRANSFORMADA DISCRETA DE FOURIER COLUNA
-	// Laco que vai percorrer todos os pixels da imagem
-	for (y=0;y<largura;y++){
-        for (j=0;j<altura;j++){
-            for(x=0; x<altura; x++){
-                soma += data[x][y]*(1/(pow(M_E,((I*2*M_PI*y*x)/largura))));            
+    for (i = 0; i < largura; i++){
+        for (k = 0; k < altura; k++){
+            for (j = 0; j < altura; j++){
+                cosX = cos(((-2.0 * pi)*(k * j)) / altura);
+                senX = sin(((-2.0 * pi)*(k * j)) / altura);
+               somaReal  = somaReal +((matrizL[j][i].real * cosX) - (matrizL[j][i].imag * senX));
+                somaImag =somaImag + ((matrizL[j][i].real * senX) + (matrizL[j][i].imag * cosX));
             }
-            printf("Soma = %d", soma);
-            T[j][y] = soma;
-            soma=0;
+            matrizC[k][i].real = somaReal;
+            matrizC[k][i].imag = somaImag;
+            somaReal = 0.0;
+            somaImag = 0.0;
         }
     }
-    
-    
-    return T;
+
+    for (i = 0; i < altura; i++){
+        for (j = 0; j < largura; j++){
+            calc= (((matrizC[i][j].real) * (matrizC[i][j].real)) + ((matrizC[i][j].imag) * (matrizC[i][j].imag)));
+            espectro = log(sqrt(calc));
+            matrizEspectro[i][j] = espectro;
+            calc=0.0;
+        }
+    }
+
+
+    for (i = 0; i < altura; i++){
+        for (j = 0; j < largura; j++){
+            auxMaxEspectro = matrizEspectro[i][j];
+            if (auxMaxEspectro > maxEspectro){
+                maxEspectro = auxMaxEspectro;
+            }
+        }
+    }
+    for (y=0;y<altura;y++){
+        for (x=0;x<largura;x++){
+            M1[y][x] = (matrizEspectro[y][x]/maxEspectro)*255;
+        }
+    }
+    return M1;
 }
-
 /*metodo principal, gerencia a janela*/
 int main(int argc, char argv[]) {
 
@@ -2105,3 +2238,4 @@ int main(int argc, char argv[]) {
 	al_destroy_display(janela);
     return 0;
 }
+
