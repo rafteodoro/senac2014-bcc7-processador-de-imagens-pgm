@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #define _USE_MATH_DEFINES
 #include <math.h>
-//#include "mpi.h"
+#include <omp.h>
 
 typedef struct numComplexo {
     float real;
@@ -281,8 +281,8 @@ unsigned char **calcFourier(unsigned char **data, int altura, int largura){
     Comp **matrizL;
     Comp **matrizC;
     double **matrizEspectro;
-    double espectro, auxMaxEspectro=0, maxEspectro=0, calc=0, cosX, senX, somaReal, somaImag; 
-    int i, j, k;
+    double espectro, auxMaxEspectro=0, maxEspectro=0, calc=0, cosX, senX, somaReal, somaImag, start, end, tempTotal; 
+    int i, j, k, qtdThead;
     
     M1 = alocaMatrizChar(altura, largura);
     matrizEspectro = alocaMatrizDouble(altura, largura);
@@ -291,47 +291,61 @@ unsigned char **calcFourier(unsigned char **data, int altura, int largura){
     
     printf("CALCFOURIER Calculando...\n");
     
-    //omp_set_num_threads(2);
-    //double start = omp_get_wtime( );
-    //#pragma omp parallel
+	start = omp_get_wtime( );
+    printf("\nCALCFOURIER for 1...\n"); 
+	       
+    #pragma omp parallel
     {
-        printf("CALCFOURIER for 1...\n");      
-        //#pragma omp for
+    	qtdThead = omp_get_num_threads();
+    	#pragma omp for private (k, j, cosX, senX, somaReal, somaImag)
         for (i = 0; i < altura; i++){
             for (k = 0; k < largura; k++){
-                for (j = 0; j < largura; j++){
+            	somaReal = 0.0;
+                somaImag = 0.0;
+				for (j = 0; j < largura; j++){
                     cosX = cos(((-2.0 * M_PI)*(k * j)) / largura);
                     senX = sin(((-2.0 * M_PI)*(k * j)) / largura);
-                    somaReal =somaReal + (data[i][j] * cosX) - (0.0 * senX);
-                    somaImag =somaImag + (0.0 * cosX)+(data[i][j] * senX) ;
+                    somaReal += (data[i][j] * cosX) - (0.0 * senX);
+                    somaImag += (0.0 * cosX)+(data[i][j] * senX) ;
                 }
-                matrizL[i][k].real = somaReal;
+				matrizL[i][k].real = somaReal;
                 matrizL[i][k].imag = somaImag;
-                somaReal = 0.0;
-                somaImag = 0.0;
             }
+       
         }
-        
-        printf("CALCFOURIER for 2...\n");
-        //#pragma omp for
+	}
+    end = omp_get_wtime( );
+	printf("CALCFOURIER tempo de exec:%f Qtd threads:%d\n", end-start,  qtdThead);
+	
+	tempTotal = end-start;
+	
+	printf("\nCALCFOURIER for 2...\n");
+	start = omp_get_wtime( );
+	//#pragma omp parallel
+    {
+       qtdThead = omp_get_num_threads();
+	    //#pragma omp for
         for (i = 0; i < largura; i++){
             for (k = 0; k < altura; k++){
-                for (j = 0; j < altura; j++){
+                somaReal = 0.0;
+                somaImag = 0.0;
+				for (j = 0; j < altura; j++){
                     cosX = cos(((-2.0 * M_PI)*(k * j)) / altura);
                     senX = sin(((-2.0 * M_PI)*(k * j)) / altura);
                     somaReal  = somaReal +((matrizL[j][i].real * cosX) - (matrizL[j][i].imag * senX));
                     somaImag =somaImag + ((matrizL[j][i].real * senX) + (matrizL[j][i].imag * cosX));
                 }
                 matrizC[k][i].real = somaReal;
-                matrizC[k][i].imag = somaImag;
-                somaReal = 0.0;
-                somaImag = 0.0;
+                matrizC[k][i].imag = somaImag; 
             }
         }
     }
-    //double end = omp_get_wtime( );
-    // printf("\n\nTEMPO DE EXECUCAO:%f\n", end-start);
-   
+	end = omp_get_wtime( );
+	printf("CALCFOURIER tempo de execucao:%f Qtd threads:%d\n\n", end-start, qtdThead);
+	
+	tempTotal += end-start;
+	printf("CALCFOURIER tempo de execucao Total:%f\n", tempTotal);
+	
     for (i = 0; i < altura; i++){
         for (j = 0; j < largura; j++){
             calc= (((matrizC[i][j].real) * (matrizC[i][j].real)) + ((matrizC[i][j].imag) * (matrizC[i][j].imag)));
@@ -384,7 +398,7 @@ Img *fourier(Img *img){
 
 int main(int argc, char argv[]){
     const char *imagemEntrada = "imagem04.pgm";
-    const char *imagemSaida = "espectro.pgm";    
+    const char *imagemSaida = "espectro.pgm";
     Img *img, *imgF;
     
     img = obtemImagem(imagemEntrada);
