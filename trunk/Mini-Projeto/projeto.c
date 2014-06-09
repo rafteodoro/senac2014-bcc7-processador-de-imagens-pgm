@@ -2,7 +2,13 @@
 #include <stdlib.h>
 #define _USE_MATH_DEFINES
 #include <math.h>
-#include <omp.h>
+
+#ifdef _OPENMP 
+#include <omp.h> 
+#else if 
+#define omp_get_wtime( ) 0 
+#define omp_get_num_threads() 0
+#endif
 
 typedef struct numComplexo {
     float real;
@@ -293,7 +299,7 @@ unsigned char **calcFourier(unsigned char **data, int altura, int largura){
     
 	start = omp_get_wtime( );
     printf("\nCALCFOURIER for 1...\n"); 
-	       
+	//omp_set_num_threads(2);
     #pragma omp parallel
     {
     	qtdThead = omp_get_num_threads();
@@ -321,10 +327,10 @@ unsigned char **calcFourier(unsigned char **data, int altura, int largura){
 	
 	printf("\nCALCFOURIER for 2...\n");
 	start = omp_get_wtime( );
-	//#pragma omp parallel
+	#pragma omp parallel
     {
        qtdThead = omp_get_num_threads();
-	    //#pragma omp for
+	    #pragma omp for private (k, j, cosX, senX, somaReal, somaImag)
         for (i = 0; i < largura; i++){
             for (k = 0; k < altura; k++){
                 somaReal = 0.0;
