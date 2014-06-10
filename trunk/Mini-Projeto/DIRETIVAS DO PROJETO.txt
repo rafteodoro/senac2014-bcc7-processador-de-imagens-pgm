@@ -1,0 +1,20 @@
+[Slides]
+-Adicionar minha maquina e repetir os testes
+-Colocar as dificuldades encontradas
+-Colocar partes do código
+Ordem dos Slides
+	-Teoria Fourier
+	-Teoria OpenMP
+	-Código
+	-Testes
+		-Diferentes Imagens
+		-Diferentes Máquinas
+		-Comparação Paralelismo/Sequencial
+	-Dificuldades encontradas
+
+[Programa]
+-Juntar as funções em um só programa
+-Mandar caminhos dos arquivos
+-Paralelizar a inversa
+
+ENTREGA: 23:50 DE HOJE
