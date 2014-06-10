@@ -4,7 +4,7 @@
 #include <math.h>
 
 #ifdef _OPENMP 
-#include <omp.h> 
+#include <omp.h>
 #else if 
 #define omp_get_wtime( ) 0 
 #define omp_get_num_threads() 0
@@ -303,19 +303,19 @@ unsigned char **calcFourier(unsigned char **data, int altura, int largura){
     #pragma omp parallel
     {
     	qtdThead = omp_get_num_threads();
-    	#pragma omp for private (k, j, cosX, senX, somaReal, somaImag)
+    	#pragma omp for private (j, k, cosX, senX, somaReal, somaImag)
         for (i = 0; i < altura; i++){
-            for (k = 0; k < largura; k++){
+            for (j = 0; j < largura; j++){
             	somaReal = 0.0;
                 somaImag = 0.0;
-				for (j = 0; j < largura; j++){
-                    cosX = cos(((-2.0 * M_PI)*(k * j)) / largura);
-                    senX = sin(((-2.0 * M_PI)*(k * j)) / largura);
-                    somaReal += (data[i][j] * cosX) - (0.0 * senX);
-                    somaImag += (0.0 * cosX)+(data[i][j] * senX) ;
+				for (k = 0; k < largura; k++){
+                    cosX = cos(((-2.0 * M_PI)*(j * k)) / largura);
+                    senX = sin(((-2.0 * M_PI)*(j * k)) / largura);
+                    somaReal += (data[i][k] * cosX) - (0.0 * senX);
+                    somaImag += (0.0 * cosX)+(data[i][k] * senX) ;
                 }
-				matrizL[i][k].real = somaReal;
-                matrizL[i][k].imag = somaImag;
+				matrizL[i][j].real = somaReal;
+                matrizL[i][j].imag = somaImag;
             }
        
         }
@@ -330,19 +330,19 @@ unsigned char **calcFourier(unsigned char **data, int altura, int largura){
 	#pragma omp parallel
     {
        qtdThead = omp_get_num_threads();
-	    #pragma omp for private (k, j, cosX, senX, somaReal, somaImag)
-        for (i = 0; i < largura; i++){
-            for (k = 0; k < altura; k++){
+	    #pragma omp for private (i, k, cosX, senX, somaReal, somaImag)
+        for (j = 0; j < largura; j++){
+            for (i = 0; i < altura; i++){
                 somaReal = 0.0;
                 somaImag = 0.0;
-				for (j = 0; j < altura; j++){
-                    cosX = cos(((-2.0 * M_PI)*(k * j)) / altura);
-                    senX = sin(((-2.0 * M_PI)*(k * j)) / altura);
-                    somaReal  = somaReal +((matrizL[j][i].real * cosX) - (matrizL[j][i].imag * senX));
-                    somaImag =somaImag + ((matrizL[j][i].real * senX) + (matrizL[j][i].imag * cosX));
+				for (k = 0; k < altura; k++){
+                    cosX = cos(((-2.0 * M_PI)*(i * k)) / altura);
+                    senX = sin(((-2.0 * M_PI)*(i * k)) / altura);
+                    somaReal += (matrizL[k][j].real * cosX) - (matrizL[k][j].imag * senX);
+                    somaImag += (matrizL[k][j].real * senX) + (matrizL[k][j].imag * cosX);
                 }
-                matrizC[k][i].real = somaReal;
-                matrizC[k][i].imag = somaImag; 
+                matrizC[i][j].real = somaReal;
+                matrizC[i][j].imag = somaImag; 
             }
         }
     }
@@ -355,7 +355,7 @@ unsigned char **calcFourier(unsigned char **data, int altura, int largura){
     for (i = 0; i < altura; i++){
         for (j = 0; j < largura; j++){
             calc= (((matrizC[i][j].real) * (matrizC[i][j].real)) + ((matrizC[i][j].imag) * (matrizC[i][j].imag)));
-            espectro = log(sqrt(calc));
+            espectro = log(1+sqrt(calc));
             matrizEspectro[i][j] = espectro;
             calc=0.0;
         }
@@ -384,6 +384,90 @@ unsigned char **calcFourier(unsigned char **data, int altura, int largura){
     return M1;
 }
 
+int v(double x){
+	if (x>255)
+		return 255;
+	else if (x<0)
+		return 0;
+	else
+		return round(x);
+}
+
+unsigned char **calcInversaFourier(unsigned char **data, int altura, int largura){
+	unsigned char **J;
+    Comp **matrizL;
+    Comp **matrizC;
+    double **matrizEspectro;
+    double espectro, auxMaxEspectro=0, maxEspectro=0, calc=0, cosX, senX, somaReal, somaImag; 
+    int i, j, k;
+    
+    J = alocaMatrizChar(altura, largura);
+    matrizL = alocaMatrizComp(altura, largura);
+    matrizC = alocaMatrizComp(altura, largura);
+    
+    printf("CALCINVERSA Calculando...\n");
+    
+    //omp_set_num_threads(2);
+    //double start = omp_get_wtime( );
+    //#pragma omp parallel
+    {
+        printf("CALCINVERSA for 1...\n");      
+        //#pragma omp for
+        for (i = 0; i < altura; i++){
+            for (j = 0; j < largura; j++){
+            	somaReal = 0.0;
+                somaImag = 0.0;
+                for (k = 0; k < largura; k++){
+                    cosX = cos(((-2.0 * M_PI)*(j * k)) / largura);
+                    senX = sin(((-2.0 * M_PI)*(j * k)) / largura);
+                    somaReal += (matrizC[i][k].real * cosX) - (matrizC[i][k].imag * senX);
+                    somaImag += (matrizC[i][k].real * cosX) + (matrizC[i][k].imag * senX) ;
+                }
+                
+                matrizL[i][j].real = (somaReal/largura);
+                matrizL[i][j].imag = somaImag;
+
+            }
+        }
+        //ANDREEEEEEEEEE
+        
+        
+        
+        //NESSA PARTE TEM QUE RECEBER O MATRIZC DO FOURIER NORMAL PRA CALCULAR O MATRIZL ACIMA!
+        
+        printf("CALCINVERSA for 2...\n");
+        //#pragma omp for
+        for (j = 0; j < largura; j++){
+            for (i = 0; i < altura; i++){
+            	somaReal = 0.0;
+                somaImag = 0.0;
+                for (k = 0; k < altura; k++){
+                    cosX = cos(((-2.0 * M_PI)*(i * k)) / altura);
+                    senX = sin(((-2.0 * M_PI)*(i * k)) / altura);
+                    somaReal += (matrizL[k][j].real * cosX) + (matrizL[k][j].imag * senX);
+                    somaImag += (matrizL[k][j].real * senX) + (matrizL[k][j].imag * cosX);
+                }
+                matrizC[i][j].real = v(somaReal/altura);
+                matrizC[i][j].imag = somaImag;
+            }
+        }
+        
+    }
+    
+    for(i = 0;i < altura; i++){
+    	for(j = 0;j < largura; j++){
+    		J[i][j]=matrizC[i][j].real;
+    	}
+    }
+    
+    desalocaMatrizComp(matrizL, altura);
+    desalocaMatrizComp(matrizC, altura);
+ 
+    printf("CALCINVERSA calculo completo!\n");
+    return J;
+}
+
+
 Img *fourier(Img *img){
     Img *imgF;
     
@@ -402,10 +486,29 @@ Img *fourier(Img *img){
     return imgF;
 }
 
+Img *invFourier(Img *img){
+    Img *imgF;
+    
+    imgF = malloc (sizeof(Img));
+    if(imgF==NULL){
+        return NULL;              
+    }
+    
+    imgF->altura = img->altura;
+    imgF->largura = img->largura;
+    
+    imgF->data = calcInversaFourier(img->data, img->altura, img->largura);
+    if(!imgF->data){
+        return NULL;
+    }
+    return imgF;
+}
+
 int main(int argc, char argv[]){
     const char *imagemEntrada = "imagem04.pgm";
     const char *imagemSaida = "espectro.pgm";
-    Img *img, *imgF;
+    const char *imagemFinal = "saida.pgm";
+    Img *img, *imgF, *imgFinal;
     
     img = obtemImagem(imagemEntrada);
     if(img == NULL){
@@ -423,6 +526,17 @@ int main(int argc, char argv[]){
     
     gravaImagem(imgF, imagemSaida);
     
+    imgFinal = invFourier(imgF);
+    if(!imgFinal){
+        desalocaImg(imgF);
+        desalocaImg(imgFinal);
+        system("pause");
+        exit(0); 
+    }
+
+    gravaImagem(imgF, imagemFinal);
+    
+    desalocaImg(imgFinal);
     desalocaImg(imgF);
     desalocaImg(img);
     system("pause");
