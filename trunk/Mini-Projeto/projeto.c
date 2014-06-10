@@ -15,6 +15,8 @@ typedef struct numComplexo {
     float imag;
 } Comp;
 
+Comp **matrizC;
+
 typedef struct imagem{
         int altura;
         int largura;
@@ -285,7 +287,6 @@ int gravaImagem(Img *img, const char *diretorio){
 unsigned char **calcFourier(unsigned char **data, int altura, int largura){
     unsigned char **M1;
     Comp **matrizL;
-    Comp **matrizC;
     double **matrizEspectro;
     double espectro, auxMaxEspectro=0, maxEspectro=0, calc=0, cosX, senX, somaReal, somaImag, start, end, tempTotal; 
     int i, j, k, qtdThead;
@@ -377,7 +378,7 @@ unsigned char **calcFourier(unsigned char **data, int altura, int largura){
     }
     
     desalocaMatrizComp(matrizL, altura);
-    desalocaMatrizComp(matrizC, altura);
+
     desalocaMatrizDouble(matrizEspectro, altura);
  
     printf("CALCFOURIER calculo completo!\n");
@@ -393,17 +394,17 @@ int v(double x){
 		return round(x);
 }
 
-unsigned char **calcInversaFourier(unsigned char **data, int altura, int largura){
+unsigned char **calcInversaFourier(int altura, int largura){
 	unsigned char **J;
     Comp **matrizL;
-    Comp **matrizC;
+    Comp **matrizJ;
     double **matrizEspectro;
     double espectro, auxMaxEspectro=0, maxEspectro=0, calc=0, cosX, senX, somaReal, somaImag; 
     int i, j, k;
     
     J = alocaMatrizChar(altura, largura);
     matrizL = alocaMatrizComp(altura, largura);
-    matrizC = alocaMatrizComp(altura, largura);
+    matrizJ = alocaMatrizComp(altura, largura);
     
     printf("CALCINVERSA Calculando...\n");
     
@@ -418,8 +419,8 @@ unsigned char **calcInversaFourier(unsigned char **data, int altura, int largura
             	somaReal = 0.0;
                 somaImag = 0.0;
                 for (k = 0; k < largura; k++){
-                    cosX = cos(((-2.0 * M_PI)*(j * k)) / largura);
-                    senX = sin(((-2.0 * M_PI)*(j * k)) / largura);
+                    cosX = cos(((2.0 * M_PI)*(j * k)) / largura);
+                    senX = sin(((2.0 * M_PI)*(j * k)) / largura);
                     somaReal += (matrizC[i][k].real * cosX) - (matrizC[i][k].imag * senX);
                     somaImag += (matrizC[i][k].real * cosX) + (matrizC[i][k].imag * senX) ;
                 }
@@ -442,13 +443,13 @@ unsigned char **calcInversaFourier(unsigned char **data, int altura, int largura
             	somaReal = 0.0;
                 somaImag = 0.0;
                 for (k = 0; k < altura; k++){
-                    cosX = cos(((-2.0 * M_PI)*(i * k)) / altura);
-                    senX = sin(((-2.0 * M_PI)*(i * k)) / altura);
-                    somaReal += (matrizL[k][j].real * cosX) + (matrizL[k][j].imag * senX);
-                    somaImag += (matrizL[k][j].real * senX) + (matrizL[k][j].imag * cosX);
+                    cosX = cos(((2.0 * M_PI)*(i * k)) / altura);
+                    senX = sin(((2.0 * M_PI)*(i * k)) / altura);
+                    somaReal += (matrizL[k][j].real * cosX) - (matrizL[k][j].imag * senX);
+                    somaImag += (matrizL[k][j].real * cosX) + (matrizL[k][j].imag * senX);
                 }
-                matrizC[i][j].real = v(somaReal/altura);
-                matrizC[i][j].imag = somaImag;
+                matrizJ[i][j].real = v(somaReal/altura);
+                matrizJ[i][j].imag = somaImag;
             }
         }
         
@@ -456,12 +457,12 @@ unsigned char **calcInversaFourier(unsigned char **data, int altura, int largura
     
     for(i = 0;i < altura; i++){
     	for(j = 0;j < largura; j++){
-    		J[i][j]=matrizC[i][j].real;
+    		J[i][j]=matrizJ[i][j].real;
     	}
     }
     
     desalocaMatrizComp(matrizL, altura);
-    desalocaMatrizComp(matrizC, altura);
+    desalocaMatrizComp(matrizJ, altura);
  
     printf("CALCINVERSA calculo completo!\n");
     return J;
@@ -497,7 +498,7 @@ Img *invFourier(Img *img){
     imgF->altura = img->altura;
     imgF->largura = img->largura;
     
-    imgF->data = calcInversaFourier(img->data, img->altura, img->largura);
+    imgF->data = calcInversaFourier(img->altura, img->largura);
     if(!imgF->data){
         return NULL;
     }
@@ -509,6 +510,9 @@ int main(int argc, char argv[]){
     const char *imagemSaida = "espectro.pgm";
     const char *imagemFinal = "saida.pgm";
     Img *img, *imgF, *imgFinal;
+    int op=0;
+    printf("\nSelecione o modo de execucao: \n\n 1 - Sequencial \n 2 - Paralelo \n");
+    scanf("%d",&op);
     
     img = obtemImagem(imagemEntrada);
     if(img == NULL){
@@ -534,8 +538,9 @@ int main(int argc, char argv[]){
         exit(0); 
     }
 
-    gravaImagem(imgF, imagemFinal);
+    gravaImagem(imgFinal, imagemFinal);
     
+    desalocaMatrizComp(matrizC,imgF->altura);
     desalocaImg(imgFinal);
     desalocaImg(imgF);
     desalocaImg(img);
