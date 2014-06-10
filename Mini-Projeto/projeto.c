@@ -10,6 +10,8 @@
 #define omp_get_num_threads() 0
 #endif
 
+int threadLigado;
+
 typedef struct numComplexo {
     float real;
     float imag;
@@ -300,7 +302,9 @@ unsigned char **calcFourier(unsigned char **data, int altura, int largura){
     
 	start = omp_get_wtime( );
     printf("\nCALCFOURIER for 1...\n"); 
-	//omp_set_num_threads(2);
+	
+	if(threadLigado==0)
+		omp_set_num_threads(1);
     #pragma omp parallel
     {
     	qtdThead = omp_get_num_threads();
@@ -399,21 +403,24 @@ unsigned char **calcInversaFourier(int altura, int largura){
     Comp **matrizL;
     Comp **matrizJ;
     double **matrizEspectro;
-    double espectro, auxMaxEspectro=0, maxEspectro=0, calc=0, cosX, senX, somaReal, somaImag; 
-    int i, j, k;
+    double espectro, auxMaxEspectro=0, maxEspectro=0, calc=0, cosX, senX, somaReal, somaImag, start, end, tempTotal; 
+    int i, j, k, qtdThead=0;
     
     J = alocaMatrizChar(altura, largura);
     matrizL = alocaMatrizComp(altura, largura);
     matrizJ = alocaMatrizComp(altura, largura);
     
     printf("CALCINVERSA Calculando...\n");
+    printf("CALCINVERSA for 1...\n"); 
     
-    //omp_set_num_threads(2);
-    //double start = omp_get_wtime( );
-    //#pragma omp parallel
+    if(threadLigado==0)
+		omp_set_num_threads(1);
+    
+	start = omp_get_wtime( );
+    #pragma omp parallel
     {
-        printf("CALCINVERSA for 1...\n");      
-        //#pragma omp for
+    	qtdThead = omp_get_num_threads();     
+        #pragma omp for private (j, k, cosX, senX, somaReal, somaImag)
         for (i = 0; i < altura; i++){
             for (j = 0; j < largura; j++){
             	somaReal = 0.0;
@@ -430,14 +437,20 @@ unsigned char **calcInversaFourier(int altura, int largura){
 
             }
         }
-        //ANDREEEEEEEEEE
+    }
+    end = omp_get_wtime( );
+	printf("CALCINVERSA tempo de execucao:%f Qtd threads:%d\n\n", end-start, qtdThead);
+	tempTotal = end-start;
         
-        
-        
+		//ANDREEEEEEEEEE
         //NESSA PARTE TEM QUE RECEBER O MATRIZC DO FOURIER NORMAL PRA CALCULAR O MATRIZL ACIMA!
         
-        printf("CALCINVERSA for 2...\n");
-        //#pragma omp for
+    printf("CALCINVERSA for 2...\n");
+    start = omp_get_wtime( );
+    #pragma omp parallel
+    {
+        qtdThead = omp_get_num_threads();
+		#pragma omp for private (i, k, cosX, senX, somaReal, somaImag)
         for (j = 0; j < largura; j++){
             for (i = 0; i < altura; i++){
             	somaReal = 0.0;
@@ -451,9 +464,14 @@ unsigned char **calcInversaFourier(int altura, int largura){
                 matrizJ[i][j].real = v(somaReal/altura);
                 matrizJ[i][j].imag = somaImag;
             }
-        }
-        
+        }   
     }
+    end = omp_get_wtime( );
+    printf("CALCINVERSA tempo de execucao:%f Qtd threads:%d\n\n", end-start, qtdThead);
+	
+	tempTotal += end-start;
+	printf("CALCINVERSA tempo de execucao Total:%f\n", tempTotal);
+    
     
     for(i = 0;i < altura; i++){
     	for(j = 0;j < largura; j++){
@@ -514,6 +532,14 @@ int main(int argc, char argv[]){
     printf("\nSelecione o modo de execucao: \n\n 1 - Sequencial \n 2 - Paralelo \n");
     scanf("%d",&op);
     
+    if(op==2)
+	{
+		threadLigado=1;
+	}
+	else{
+		threadLigado=0;
+	}
+		
     img = obtemImagem(imagemEntrada);
     if(img == NULL){
         system("pause");
