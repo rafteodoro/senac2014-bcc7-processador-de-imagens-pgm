@@ -303,8 +303,8 @@ unsigned char **calcFourier(unsigned char **data, int altura, int largura){
 	start = omp_get_wtime( );
     printf("\nCALCFOURIER for 1...\n"); 
 	
-	//if(threadLigado==0)
-//		omp_set_num_threads(1);
+	if(threadLigado==0)
+		omp_set_num_threads(1);
     #pragma omp parallel
     {
     	qtdThead = omp_get_num_threads();
@@ -343,8 +343,8 @@ unsigned char **calcFourier(unsigned char **data, int altura, int largura){
 				for (k = 0; k < altura; k++){
                     cosX = cos(((2.0 * M_PI)*(i * k)) / altura);
                     senX = sin(((2.0 * M_PI)*(i * k)) / altura);
-                    somaReal += (matrizL[k][j].real * cosX) - (matrizL[k][j].imag * senX);
-                    somaImag += (matrizL[k][j].real * senX) + (matrizL[k][j].imag * cosX);
+                    somaReal += (matrizL[k][j].real * cosX) + (matrizL[k][j].imag * senX);
+                    somaImag += (matrizL[k][j].real * senX) - (matrizL[k][j].imag * cosX);
                 }
                 matrizC[i][j].real = somaReal;
                 matrizC[i][j].imag = somaImag; 
@@ -413,8 +413,8 @@ unsigned char **calcInversaFourier(int altura, int largura){
     printf("CALCINVERSA Calculando...\n");
     printf("CALCINVERSA for 1...\n"); 
     
-    //if(threadLigado==0)
-//		omp_set_num_threads(1);
+    if(threadLigado==0)
+		omp_set_num_threads(1);
     
 	start = omp_get_wtime( );
     #pragma omp parallel
@@ -441,9 +441,6 @@ unsigned char **calcInversaFourier(int altura, int largura){
     end = omp_get_wtime( );
 	printf("CALCINVERSA tempo de execucao:%f Qtd threads:%d\n\n", end-start, qtdThead);
 	tempTotal = end-start;
-        
-		//ANDREEEEEEEEEE
-        //NESSA PARTE TEM QUE RECEBER O MATRIZC DO FOURIER NORMAL PRA CALCULAR O MATRIZL ACIMA!
         
     printf("CALCINVERSA for 2...\n");
     start = omp_get_wtime( );
