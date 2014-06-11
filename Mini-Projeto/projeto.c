@@ -117,7 +117,7 @@ int getCabecalho(FILE *arquivo, int *altura, int *largura) {
 		return -1;
 	}
 
-	/*Verifica versÐ³o da imagem*/
+	/*Verifica versÃÂ³o da imagem*/
 	buf = getc(arquivo);
 
 	if(buf!='5') {
@@ -303,8 +303,8 @@ unsigned char **calcFourier(unsigned char **data, int altura, int largura){
 	start = omp_get_wtime( );
     printf("\nCALCFOURIER for 1...\n"); 
 	
-	if(threadLigado==0)
-		omp_set_num_threads(1);
+	//if(threadLigado==0)
+//		omp_set_num_threads(1);
     #pragma omp parallel
     {
     	qtdThead = omp_get_num_threads();
@@ -316,8 +316,8 @@ unsigned char **calcFourier(unsigned char **data, int altura, int largura){
 				for (k = 0; k < largura; k++){
                     cosX = cos(((2.0 * M_PI)*(j * k)) / largura);
                     senX = sin(((2.0 * M_PI)*(j * k)) / largura);
-                    somaReal += (data[i][k] * cosX);
-                    somaImag += (data[i][k] * senX) ;
+                    somaReal += (data[i][k] * cosX) - (0.0 * senX);
+                    somaImag += (0.0 * cosX)+(data[i][k] * senX) ;
                 }
 				matrizL[i][j].real = somaReal;
                 matrizL[i][j].imag = somaImag;
@@ -413,8 +413,8 @@ unsigned char **calcInversaFourier(int altura, int largura){
     printf("CALCINVERSA Calculando...\n");
     printf("CALCINVERSA for 1...\n"); 
     
-    if(threadLigado==0)
-		omp_set_num_threads(1);
+    //if(threadLigado==0)
+//		omp_set_num_threads(1);
     
 	start = omp_get_wtime( );
     #pragma omp parallel
@@ -429,7 +429,7 @@ unsigned char **calcInversaFourier(int altura, int largura){
                     cosX = cos(((2.0 * M_PI)*(j * k)) / largura);
                     senX = sin(((2.0 * M_PI)*(j * k)) / largura);
                     somaReal += (matrizC[i][k].real * cosX) + (matrizC[i][k].imag * senX);
-                    somaImag += (matrizC[i][k].real * cosX) + (matrizC[i][k].imag * cosX) ;
+                    somaImag += (matrizC[i][k].real * senX) - (matrizC[i][k].imag * cosX) ;
                 }
                 
                 matrizL[i][j].real = (somaReal/largura);
@@ -459,7 +459,7 @@ unsigned char **calcInversaFourier(int altura, int largura){
                     cosX = cos(((2.0 * M_PI)*(i * k)) / altura);
                     senX = sin(((2.0 * M_PI)*(i * k)) / altura);
                     somaReal += (matrizL[k][j].real * cosX) + (matrizL[k][j].imag * senX);
-                    somaImag += (matrizL[k][j].real * senX) + (matrizL[k][j].imag * cosX);
+                    somaImag += (matrizL[k][j].real * senX) - (matrizL[k][j].imag * cosX);
                 }
                 matrizJ[i][j].real = v(somaReal/altura);
                 matrizJ[i][j].imag = somaImag;
