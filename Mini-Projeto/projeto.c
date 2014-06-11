@@ -428,8 +428,8 @@ unsigned char **calcInversaFourier(int altura, int largura){
                 for (k = 0; k < largura; k++){
                     cosX = cos(((2.0 * M_PI)*(j * k)) / largura);
                     senX = sin(((2.0 * M_PI)*(j * k)) / largura);
-                    somaReal += (matrizC[i][k].real * cosX) + (matrizC[i][k].imag * senX);
-                    somaImag += (matrizC[i][k].real * senX) - (matrizC[i][k].imag * cosX) ;
+                    somaReal += (matrizC[i][k].real * cosX) - (matrizC[i][k].imag * senX);
+                    somaImag += (matrizC[i][k].real * senX) + (matrizC[i][k].imag * cosX) ;
                 }
                 
                 matrizL[i][j].real = (somaReal/largura);
