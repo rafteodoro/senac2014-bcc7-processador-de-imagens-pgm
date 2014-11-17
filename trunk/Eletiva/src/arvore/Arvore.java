@@ -18,24 +18,32 @@ public class Arvore
 		this.raiz = raiz;
 	}
 	
-	public No inserir(No novo, No anterior)
+	public void rotacaoD (No no)
 	{
-		return inserir(novo, anterior, 0);
+		
 	}
 	
-	public No inserir(No novo, No anterior, int n_elemento){
+	public No inserir(No novo, No anterior)
+	{
+		return inserir(novo, anterior, null, 0);
+	}
+	
+	public No inserir(No novo, No anterior, No pai, int n_elemento){
 	      if (anterior != null){
-	         if (novo.getDado() < anterior.getDado())
-	             anterior.setEsq(this.inserir(novo, anterior.getEsq(), n_elemento + 1));
+	         pai = anterior;
+	    	  
+	    	 if (novo.getDado() < anterior.getDado())
+	             anterior.setEsq(this.inserir(novo, anterior.getEsq(), pai, n_elemento + 1));
 	         else {
 	             if(novo.getDado() > anterior.getDado())
-	                anterior.setDir(this.inserir(novo, anterior.getDir(), n_elemento + 1));
+	                anterior.setDir(this.inserir(novo, anterior.getDir(), pai, n_elemento + 1));
 	             else     
 	                return null;
 	         }
 	      } else {	      
 	           anterior = novo;
 	           anterior.setN_elemento(n_elemento);
+	           anterior.setPai(pai);
 	      }
 	      return anterior;
 	  }
