@@ -47,12 +47,10 @@ public class ContFreqNum {
 			}
 		}
 		System.out.println("ARVORE PREENCHIDA");
+		
+		arvore.rotacaoD(arvore.getRaiz().getEsq().getEsq());
 	}
 	
-	public void rotacaoD (No no)
-	{
-		
-	}
 	
 	public void gravaArvore() {
 		StringBuffer arvoreString = new StringBuffer(arvore.toString());
