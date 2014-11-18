@@ -22,15 +22,7 @@ public class Arvore
 	{
 		No temp = no.getPai();
 		
-		if(no.getPai().getPai().getEsq()==no.getPai())
-		{
-			no.getPai().getPai().setEsq(no);
-		}
-		else
-		{
-			no.getPai().getPai().setDir(no);
-		}
-		
+		no.getPai().getPai().setEsq(no);
 		no.setPai(no.getPai().getPai());
 		no.setN_elemento(no.getN_elemento() - 1);
 		no.getEsq().setN_elemento(no.getEsq().getN_elemento() - 1);
@@ -46,6 +38,20 @@ public class Arvore
 	
 	public void rotacaoE (No no)
 	{
+		No temp = no.getPai();
+		
+		no.getPai().getPai().setDir(no);
+		no.setPai(no.getPai().getPai());
+		no.setN_elemento(no.getN_elemento() - 1);
+		no.getDir().setN_elemento(no.getDir().getN_elemento() - 1);
+		
+		temp.setDir(no.getEsq());
+		no.getEsq().setPai(temp);
+		
+		no.setEsq(temp);
+		temp.setPai(no);
+		temp.setN_elemento(temp.getN_elemento() + 1);
+		temp.getEsq().setN_elemento(no.getEsq().getN_elemento()-1);
 		
 	}
 	
